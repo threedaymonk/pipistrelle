@@ -4052,7 +4052,7 @@
     (property "Value" "1n" (id 1) (at 337.82 120.6499 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 334.9752 123.19 0)
+    (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (id 2) (at 334.9752 123.19 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 334.01 119.38 0)
@@ -4492,7 +4492,7 @@
     (property "Value" "1n" (id 1) (at 337.82 194.3099 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 334.9752 196.85 0)
+    (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (id 2) (at 334.9752 196.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 334.01 193.04 0)
@@ -5248,7 +5248,7 @@
     (property "Value" "1n" (id 1) (at 332.74 143.5099 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (id 2) (at 329.8952 146.05 0)
+    (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (id 2) (at 329.8952 146.05 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 328.93 142.24 0)
@@ -5601,13 +5601,13 @@
       (reference "C17") (unit 1) (value "47p") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/f118a79a-955e-4c66-b529-7fecd96a0b6d"
-      (reference "C18") (unit 1) (value "1n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C18") (unit 1) (value "1n") (footprint "Capacitor_SMD:C_1206_3216Metric")
     )
     (path "/5fb53d5c-4291-47a6-9ad1-0578fcc65cf7"
-      (reference "C19") (unit 1) (value "1n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C19") (unit 1) (value "1n") (footprint "Capacitor_SMD:C_1206_3216Metric")
     )
     (path "/8c0bcb78-d6b0-44a1-8522-f4df214a0c4f"
-      (reference "C20") (unit 1) (value "1n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C20") (unit 1) (value "1n") (footprint "Capacitor_SMD:C_1206_3216Metric")
     )
     (path "/5c9f8e74-305b-4db3-a04e-3ef2f1373b22"
       (reference "C21") (unit 1) (value "22u") (footprint "Capacitor_SMD:CP_Elec_5x5.9")
