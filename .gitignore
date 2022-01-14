@@ -4,3 +4,6 @@ fp-info-cache
 *auto_save*
 jlcpcb/assembly
 jlcpcb/gerber
+GERBER-*.zip
+POS-*.csv
+BOM-*.csv
