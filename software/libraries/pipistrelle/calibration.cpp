@@ -69,14 +69,9 @@ void performCalibration() {
 
 void loadCalibration() {
   int d1, d3;
-  d1 = __flash_cal_d1.read();
-  d3 = __flash_cal_d3.read();
-  delay(1000);
-  Serial.print("d1 = ");
-  Serial.print(d1);
-  Serial.print(", d3 = ");
-  Serial.print(d3);
-  Serial.print("\n\n");
+  // TODO: Remove hard-coded values
+  d1 = 3363; // __flash_cal_d1.read();
+  d3 = 1978; // __flash_cal_d3.read();
   __cal_k = (d3 - d1) / 2.0L;
   __cal_a = 1.0L - d1 / __cal_k;
 }
