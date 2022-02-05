@@ -1,34 +1,29 @@
 #include "pipistrelle.h"
 #include "calibration.h"
 #include <math.h>
-#define SAMPLE_RATE 48000
+#define SAMPLE_RATE 32000
+
+double potA, potB, potC, potD, cv1, cv2;
+double voct = 0;
 
 void setup() {
   initialize_hardware();
 
-  // DACSetup(SAMPLE_RATE);
+  DACSetup(SAMPLE_RATE);
 
   analogWrite(LED, 255);
 }
 
 void loop() {
-  static int potA, potB, potC, potD, cv1, cv2;
-  static double voct;
-
-  potA = readPotA();
-  delay(20);
-  potB = readPotB();
-  delay(20);
-  potC = readPotC();
-  delay(20);
-  potD = readPotD();
-  delay(20);
-  cv1 = readCv1();
-  delay(20);
-  cv2 = readCv2();
-  delay(20);
   voct = readVoct();
+  potA = readPotA();
+  potB = readPotB();
+  potC = readPotC();
+  potD = readPotD();
+  cv1 = readCv1();
+  cv2 = readCv2();
 
+  /*
   Serial.print("__cal_a = ");
   Serial.print(__cal_a);
   Serial.print(", __cal_k = ");
@@ -56,40 +51,57 @@ void loop() {
   Serial.print("\n");
   //analogWrite(A0, potA / 4);
   DACWrite(potA / 4);
+  */
 
-  delay(280);
-  delay(100);
+  delay(10);
 }
 
-/*
+double sineWave(double pos) {
+  return sin(pos * M_PI * 2);
+}
+
+double triangleWave(double pos) {
+  if (pos < 0.25) return pos * 4;
+  if (pos < 0.75) return 1 - (pos - 0.25) * 4;
+  return 1 + (pos - 0.75) * 4;
+}
+
+double squareWave(double pos) {
+  if (pos < 0.5) return 1;
+  return -1;
+}
+
+double sawWave(double pos) {
+  if (pos < 0.5) return pos * 2;
+  return pos * 2 - 2;
+}
+
 void TC4_Handler() {
   static uint32_t offset = 0;
-  static uint16_t sample = 0;
+  static double sample = 0;
+  static double time, frequency, period, x, y, z;
 
-  static double adecay = 1.7
-  static double frequency = 10
-  static double fdecay = 1.1
+  if (offset == 0) {
+    frequency = 200 * pow(2, voct + 5 * unipolar(potA));
+    period = SAMPLE_RATE / frequency;
+    x = unipolar(potB);
+    y = unipolar(potC);
+    z = unipolar(potD);
+  }
 
-  double x;
-
-  sample = (adecay ** (-x * 2 * M_PI)) * \
-           sin(x * frequency * (fdecay ** (-x * 2 * pi)) * 2 * M_PI) 
-
-
-
-  x = (double)(offset) / (double)4;
-  sample = (int)(511.5 + 511.5 * sin(x));
-  //DACWrite(sample );
-  analogWrite(AUDIO_OUT, sample);
-
-  /*
-  x = (offset * 32) % 1024;
-  if (x < 512) sample = 2 * x;
-  else sample = 2047 - 2 * x;
-  DACWrite(sample * 0.7);
+  time = (double)offset / SAMPLE_RATE;
+  sample = 
+    (1 - z) * (
+      (1 - x) * sineWave(time * frequency)
+      + x * triangleWave(time * frequency)
+    ) + z * (
+      (1 - y) * squareWave(time * frequency)
+      + y * sawWave(time * frequency)
+    );
+  DACWrite(511.5 + 511.5 * sample);
 
   offset += 1;
+  if (offset > period) offset = 0;
 
   REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
 }
-*/

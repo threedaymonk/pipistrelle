@@ -44,6 +44,16 @@ void DACWrite(uint16_t sample) {
   while (ADC->STATUS.bit.SYNCBUSY);
 }
 
+// scale an ADC reading to 0 to 1
+double unipolar(int reading) {
+  return reading / 4096.0L;
+}
+
+// scale an ADC reading to -1 to 1
+double bipolar(int reading) {
+  return reading / 2048.0L - 1;
+}
+
 int readPotA() {
   return analogRead(POTA);
 }

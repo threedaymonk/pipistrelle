@@ -19,6 +19,8 @@
 
 void DACSetup(uint32_t sampleRate);
 void DACWrite(uint16_t sample);
+double unipolar(int reading);
+double bipolar(int reading);
 int readPotA();
 int readPotB();
 int readPotC();
