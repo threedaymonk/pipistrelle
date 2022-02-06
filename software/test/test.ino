@@ -63,7 +63,7 @@ double sineWave(double pos) {
 double triangleWave(double pos) {
   if (pos < 0.25) return pos * 4;
   if (pos < 0.75) return 1 - (pos - 0.25) * 4;
-  return 1 + (pos - 0.75) * 4;
+  return 1 + (pos - 1.25) * 4;
 }
 
 double squareWave(double pos) {
