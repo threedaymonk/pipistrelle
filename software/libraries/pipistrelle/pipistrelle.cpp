@@ -1,8 +1,36 @@
 #include "pipistrelle.h"
 #include "calibration.h"
 
-void DACSetup(uint32_t sampleRate) {
-  uint32_t top = CLOCK_SPEED / sampleRate; // overflow interrupt trigger value
+void initializeHardware(int sampleRate) {
+  // Use maximum ADC and DAC resolution available to us
+  analogReadResolution(12);
+
+  // Set up inputs and outputs
+  // Note: *do not* set AUDIO_OUT to OUTPUT, or the output will be truncated
+  // at around 2.2V
+  pinMode(POTA, INPUT);
+  pinMode(POTB, INPUT);
+  pinMode(POTC, INPUT);
+  pinMode(POTD, INPUT);
+  pinMode(CV1, INPUT);
+  pinMode(CV2, INPUT);
+  pinMode(VOCT, INPUT);
+  pinMode(LED, OUTPUT);
+
+  if (isCalibrationHandshake()) {
+    performCalibration();
+  }
+
+  loadCalibration();
+
+  DACSetup(sampleRate);
+
+  REG_TC4_CTRLA |= TC_CTRLA_ENABLE;
+  while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
+}
+
+void DACSetup(int sampleRate) {
+  uint32_t top = CLOCK_SPEED / (sampleRate); // overflow interrupt trigger value
 
   REG_GCLK_GENDIV
     = GCLK_GENDIV_DIV(1) // divide by 1 = 48MHz clock
@@ -37,21 +65,18 @@ void DACSetup(uint32_t sampleRate) {
   while (TC4->COUNT16.STATUS.bit.SYNCBUSY); // sync
 }
 
-void DACWrite(uint16_t sample) {
-  DAC->DATA.reg = sample;
-  while (ADC->STATUS.bit.SYNCBUSY);
-  DAC->CTRLA.bit.ENABLE = 1;
-  while (ADC->STATUS.bit.SYNCBUSY);
-}
-
 // scale an ADC reading to 0 to 1
+// Ignore the top and bottom (see END_SLOP) because the end of pot travel isn't
+// very reliable
 double unipolar(int reading) {
-  return reading / 4096.0L;
+  int clamped = reading - END_SLOP;
+  return (double)constrain(clamped, 0, MAX_ADC - 2 * END_SLOP)
+    / (MAX_ADC - 2 * END_SLOP);
 }
 
 // scale an ADC reading to -1 to 1
 double bipolar(int reading) {
-  return reading / 2048.0L - 1;
+  return 2 * unipolar(reading) - 1;
 }
 
 int readPotA() {
@@ -82,26 +107,3 @@ double readVoct() {
   return __cal_a + analogRead(VOCT) / __cal_k;
 }
 
-void initialize_hardware() {
-  // Use maximum ADC and DAC resolution available to us
-  analogReadResolution(12);
-  analogWriteResolution(10);
-
-  // Set up inputs and outputs
-  // Note: *do not* set AUDIO_OUT to OUTPUT, or the output will be truncated
-  // at around 2.2V
-  pinMode(POTA, INPUT);
-  pinMode(POTB, INPUT);
-  pinMode(POTC, INPUT);
-  pinMode(POTD, INPUT);
-  pinMode(CV1, INPUT);
-  pinMode(CV2, INPUT);
-  pinMode(VOCT, INPUT);
-  pinMode(LED, OUTPUT);
-
-  if (isCalibrationHandshake()) {
-    performCalibration();
-  }
-
-  loadCalibration();
-}

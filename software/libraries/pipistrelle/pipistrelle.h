@@ -14,11 +14,17 @@
 #define VOCT 4
 #define LED 6
 
-#define CLOCK_SPEED 0x2dc0000
+#define CLOCK_SPEED 47972352
 #define MAX_ADC 4095
+#define END_SLOP 5
 
-void DACSetup(uint32_t sampleRate);
-void DACWrite(uint16_t sample);
+#define DACWrite(v) do { \
+  DAC->DATA.reg = (v); \
+  DAC->CTRLA.bit.ENABLE = 1; \
+} while (0)
+
+void initializeHardware(int sampleRate);
+void DACSetup(int sampleRate);
 double unipolar(int reading);
 double bipolar(int reading);
 int readPotA();
@@ -28,6 +34,5 @@ int readPotD();
 int readCv1();
 int readCv2();
 double readVoct();
-void initialize_hardware();
 
 #endif /* __pipistrelle_h__ */

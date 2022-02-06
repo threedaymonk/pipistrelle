@@ -2,106 +2,91 @@
 #include "calibration.h"
 #include <math.h>
 #define SAMPLE_RATE 32000
+#define C2 65.4064
 
-double potA, potB, potC, potD, cv1, cv2;
+double voctA, x, y, z;
 double voct = 0;
+uint32_t __period = 100;
 
 void setup() {
-  initialize_hardware();
+  uint32_t top;
+  initializeHardware(SAMPLE_RATE);
 
-  DACSetup(SAMPLE_RATE);
-
+  delay(10);
   analogWrite(LED, 255);
+
+  top = CLOCK_SPEED / 32000;
+  REG_TC4_COUNT16_CC0 = top;
 }
 
 void loop() {
-  voct = readVoct();
-  potA = readPotA();
-  potB = readPotB();
-  potC = readPotC();
-  potD = readPotD();
-  cv1 = readCv1();
-  cv2 = readCv2();
+  static double frequency;
+  voct = readVoct() + floor(60.0L * unipolar(readPotA())) / 12.0L;
+  frequency = C2 * pow(2, voct);
+  __period = SAMPLE_RATE / frequency;
+
+  x = constrain(unipolar(readPotB()) + bipolar(readCv1()) / 2, 0, 1);
+  y = constrain(unipolar(readPotC()) + bipolar(readCv2()) / 2, 0, 1);
+  z = unipolar(readPotD());
+
+
 
   /*
-  Serial.print("__cal_a = ");
-  Serial.print(__cal_a);
-  Serial.print(", __cal_k = ");
-  Serial.print(__cal_k);
-  Serial.print("\n\n");
-
-  Serial.print("A = ");
-  Serial.print(potA);
-  Serial.print(", B = ");
-  Serial.print(potB);
-  Serial.print(", C = ");
-  Serial.print(potC);
-  Serial.print(", D = ");
-  Serial.print(potD);
-  Serial.print("\nCV1 = ");
-  Serial.print(cv1);
-  Serial.print("\nCV2 = ");
-  Serial.print(cv2);
-  Serial.print("\nV/oct = ");
+  Serial.print("voct = ");
   Serial.print(voct);
+  Serial.print(" frequency = ");
+  Serial.print(frequency);
+  Serial.print(" period = ");
+  Serial.print(__period);
   Serial.print("\n");
-
-  Serial.print("\nOut = ");
-  Serial.print(potA / 4);
-  Serial.print("\n");
-  //analogWrite(A0, potA / 4);
-  DACWrite(potA / 4);
   */
 
   delay(10);
 }
 
-double sineWave(double pos) {
-  return sin(pos * M_PI * 2);
+// Waveform functions are expressed as f(t) where 0 <= t < 1
+
+double sineWave(double t) {
+  return sin(t * M_PI * 2);
 }
 
-double triangleWave(double pos) {
-  if (pos < 0.25) return pos * 4;
-  if (pos < 0.75) return 1 - (pos - 0.25) * 4;
-  return 1 + (pos - 1.25) * 4;
+double triangleWave(double t) {
+  if (t < 0.25) return t * 4;
+  if (t < 0.75) return 1 - (t - 0.25) * 4;
+  return 1 + (t - 1.25) * 4;
 }
 
-double squareWave(double pos) {
-  if (pos < 0.5) return 1;
+double squareWave(double t) {
+  if (t < 0.5) return 1;
   return -1;
 }
 
-double sawWave(double pos) {
-  if (pos < 0.5) return pos * 2;
-  return pos * 2 - 2;
+double sawWave(double t) {
+  if (t < 0.5) return t * 2;
+  return t * 2 - 2;
 }
 
 void TC4_Handler() {
-  static uint32_t offset = 0;
+  static uint32_t offset = 0, period;
   static double sample = 0;
-  static double time, frequency, period, x, y, z;
+  static double time, frequency;
 
   if (offset == 0) {
-    frequency = 200 * pow(2, voct + 5 * unipolar(potA));
-    period = SAMPLE_RATE / frequency;
-    x = unipolar(potB);
-    y = unipolar(potC);
-    z = unipolar(potD);
+    period = __period;
   }
 
-  time = (double)offset / SAMPLE_RATE;
+  /*
+  time = offset * frequency / SAMPLE_RATE;
   sample = 
-    (1 - z) * (
-      (1 - x) * sineWave(time * frequency)
-      + x * triangleWave(time * frequency)
-    ) + z * (
-      (1 - y) * squareWave(time * frequency)
-      + y * sawWave(time * frequency)
-    );
+    (1 - y) * ((1 - x) * sineWave(time)   + x * triangleWave(time))
+    + y     * ((1 - x) * squareWave(time) + x * sawWave(time));
   DACWrite(511.5 + 511.5 * sample);
+  */
+  if (2 * offset > period) DACWrite(1023);
+  else DACWrite(0);
 
   offset += 1;
-  if (offset > period) offset = 0;
+  if (offset >= period) offset = 0;
 
   REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
 }
