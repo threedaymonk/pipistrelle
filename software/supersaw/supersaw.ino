@@ -30,8 +30,10 @@ void loop() {
     + unipolar(read_potb()) / 6.0L; // fine tuning +/- 2 semitones
 
   frequency = C0 * pow(2, voct);
-  spread = 0.02 * frequency * constrain(unipolar(read_potc()) + bipolar(read_cv1()) / 2, 0, 1);
-  subosc = Q14_1 * constrain(unipolar(read_potd()) + bipolar(read_cv2()) / 2, 0, 1);
+  spread = frequency / 80
+         * constrain(unipolar(read_potc()) + bipolar(read_cv1()) / 2, 0, 1);
+  subosc = Q14_1
+         * constrain(unipolar(read_potd()) + bipolar(read_cv2()) / 2, 0, 1);
 
   for (int i = 0; i < 7; i++) {
     period[i] = SAMPLE_RATE / (frequency + spread * (i - 3));
