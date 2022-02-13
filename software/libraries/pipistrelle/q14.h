@@ -13,6 +13,7 @@ typedef int32_t q14_t;
 q14_t q14_sine(q14_t x);
 q14_t q14_triangle(q14_t x);
 q14_t q14_square(q14_t x);
+q14_t q14_quarter_square(q14_t x);
 q14_t q14_saw(q14_t x);
 void q14_dac_write(q14_t sample);
 
