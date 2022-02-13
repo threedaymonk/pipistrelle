@@ -1,33 +1,33 @@
-#include "pipistrelle.h"
-#include "calibration.h"
+#include <pipistrelle.h>
+#include <calibration.h>
 #include <FlashStorage.h>
 
 FlashStorage(__flash_cal_d1, int);
 FlashStorage(__flash_cal_d3, int);
 double __cal_k, __cal_a;
 
-bool isCalibrationHandshake() {
+bool calibration_requested() {
   // Calibration mode is entered by moving all pots to minimum and connecting
   // Out to CV2
 
   // Check all pots are low
-  if (   readPotA() > POT_LOW
-      || readPotB() > POT_LOW
-      || readPotC() > POT_LOW
-      || readPotD() > POT_LOW) return false;
+  if (   read_pota() > POT_LOW
+      || read_potb() > POT_LOW
+      || read_potc() > POT_LOW
+      || read_potd() > POT_LOW) return false;
 
   // Probe CV1 with the DAC output
-  DACWrite(0);
+  dac_write(0);
   delay(20);
-  if (readCv1() > CV_LOW) return false;
-  DACWrite(1023);
+  if (read_cv1() > CV_LOW) return false;
+  dac_write(1023);
   delay(20);
-  if (readCv1() < CV_HIGH) return false;
+  if (read_cv1() < CV_HIGH) return false;
 
   return true;
 }
 
-int sampleVoct() {
+int sample_voct() {
   int sum = 0; 
   for (int i = 0; i < 10; i++) {
     sum += analogRead(VOCT);
@@ -39,9 +39,9 @@ int sampleVoct() {
   return sum / 10;
 }
 
-void performCalibration() {
+void run_calibration() {
   // Flash LED until pot A is turned clockwise
-  while(readPotA() < POT_HIGH) {
+  while(read_pota() < POT_HIGH) {
     analogWrite(LED, 255);
     delay(500);
     analogWrite(LED, 0);
@@ -49,10 +49,10 @@ void performCalibration() {
   }
 
   // Store reading for 1V
-  __flash_cal_d1.write(sampleVoct());
+  __flash_cal_d1.write(sample_voct());
 
   // Double-flash LED until pot B is turned clockwise
-  while(readPotB() < POT_HIGH) {
+  while(read_potb() < POT_HIGH) {
     analogWrite(LED, 255);
     delay(167);
     analogWrite(LED, 0);
@@ -64,14 +64,25 @@ void performCalibration() {
   }
 
   // Store reading for 3V
-  __flash_cal_d3.write(sampleVoct());
+  __flash_cal_d3.write(sample_voct());
 }
 
-void loadCalibration() {
+void load_calibration() {
   int d1, d3;
-  // TODO: Remove hard-coded values
-  d1 = 3363; // __flash_cal_d1.read();
-  d3 = 1978; // __flash_cal_d3.read();
+  d1 = __flash_cal_d1.read();
+  d3 = __flash_cal_d3.read();
+
+  Serial.write("d1 = ");
+  Serial.write(d1);
+  Serial.write(", d3 = ");
+  Serial.write(d3);
+  Serial.write("\n");
+
+  // Sensible-ish defaults based on build No. 1
+  if (d1 == 0 && d3 == 0) {
+    d1 = 3363;
+    d3 = 1978;
+  }
   __cal_k = (d3 - d1) / 2.0L;
   __cal_a = 1.0L - d1 / __cal_k;
 }

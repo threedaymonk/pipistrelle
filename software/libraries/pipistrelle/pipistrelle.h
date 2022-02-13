@@ -18,21 +18,21 @@
 #define MAX_ADC 4095
 #define END_SLOP 5
 
-#define DACWrite(v) do { \
+#define dac_write(v) do { \
   DAC->DATA.reg = (v); \
   DAC->CTRLA.bit.ENABLE = 1; \
 } while (0)
 
-void initializeHardware(int sampleRate);
-void DACSetup(int sampleRate);
+void initialize_hardware(int sample_rate);
+void dac_setup(int sample_rate);
 double unipolar(int reading);
 double bipolar(int reading);
-int readPotA();
-int readPotB();
-int readPotC();
-int readPotD();
-int readCv1();
-int readCv2();
-double readVoct();
+int read_pota();
+int read_potb();
+int read_potc();
+int read_potd();
+int read_cv1();
+int read_cv2();
+double read_voct();
 
 #endif /* __pipistrelle_h__ */

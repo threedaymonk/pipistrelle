@@ -12,9 +12,9 @@
 // voltage = a + raw value / k
 extern double __cal_k, __cal_a;
 
-bool isCalibrationHandshake();
-int sampleVoct();
-void performCalibration();
-void loadCalibration();
+bool calibration_requested();
+int sample_voct();
+void run_calibration();
+void load_calibration();
 
 #endif /* __calibration_h__ */

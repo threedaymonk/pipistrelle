@@ -1,7 +1,8 @@
-#include "pipistrelle.h"
-#include "calibration.h"
+#include <pipistrelle.h>
+#include <calibration.h>
+#include <q14.h>
 
-void initializeHardware(int sampleRate) {
+void initialize_hardware(int sample_rate) {
   // Use maximum ADC and DAC resolution available to us
   analogReadResolution(12);
 
@@ -17,20 +18,20 @@ void initializeHardware(int sampleRate) {
   pinMode(VOCT, INPUT);
   pinMode(LED, OUTPUT);
 
-  if (isCalibrationHandshake()) {
-    performCalibration();
+  if (calibration_requested()) {
+    run_calibration();
   }
 
-  loadCalibration();
+  load_calibration();
 
-  DACSetup(sampleRate);
+  dac_setup(sample_rate);
 
   REG_TC4_CTRLA |= TC_CTRLA_ENABLE;
   while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 }
 
-void DACSetup(int sampleRate) {
-  uint32_t top = CLOCK_SPEED / (sampleRate); // overflow interrupt trigger value
+void dac_setup(int sample_rate) {
+  uint32_t top = CLOCK_SPEED / (sample_rate); // overflow interrupt trigger value
 
   REG_GCLK_GENDIV
     = GCLK_GENDIV_DIV(1) // divide by 1 = 48MHz clock
@@ -79,31 +80,37 @@ double bipolar(int reading) {
   return 2 * unipolar(reading) - 1;
 }
 
-int readPotA() {
+int read_pota() {
   return analogRead(POTA);
 }
 
-int readPotB() {
+int read_potb() {
   return analogRead(POTB);
 }
 
-int readPotC() {
+int read_potc() {
   return analogRead(POTC);
 }
 
-int readPotD() {
+int read_potd() {
   return analogRead(POTD);
 }
 
-int readCv1() {
+int read_cv1() {
   return MAX_ADC - analogRead(CV1);
 }
 
-int readCv2() {
+int read_cv2() {
   return MAX_ADC - analogRead(CV2);
 }
 
-double readVoct() {
+double read_voct() {
   return __cal_a + analogRead(VOCT) / __cal_k;
 }
 
+// Convert a signed Q14 value into a value between 0 and 1023.
+// We'll occasionally get 1024 and have to clamp it to 1023, but this
+// isn't noticeable and is much quicker than any cleverer method.
+void q14_dac_write(q14_t sample) {
+  dac_write(constrain((sample + Q14_1) >> 5, 0, 1023));
+}
