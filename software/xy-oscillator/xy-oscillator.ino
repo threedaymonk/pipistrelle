@@ -16,7 +16,7 @@
 #include <calibration.h>
 #include <math.h>
 #include <q14.h>
-#define SAMPLE_RATE 32000
+#define SAMPLE_RATE 48000
 #define C0 16.3516
 
 q14_t x, y;
