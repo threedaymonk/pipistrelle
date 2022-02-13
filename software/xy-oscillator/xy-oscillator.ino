@@ -25,22 +25,17 @@ uint32_t period = 100;
 void setup() {
   uint32_t top;
   initialize_hardware(SAMPLE_RATE);
-
-  delay(10);
-  analogWrite(LED, 255);
-
-  // I'm not sure why, but if we try to set the interrupt frequency
-  // immediately, it doesn't take. Waiting 10ms solves that.
-  top = CLOCK_SPEED / SAMPLE_RATE;
-  REG_TC4_COUNT16_CC0 = top;
+  digitalWrite(LED, 1);
 }
 
 void loop() {
   double frequency, voct;
+  int led_change_at = 0;
 
   voct = read_voct()
     + 6.0L * unipolar(read_pota())
     + unipolar(read_potb()) / 6.0L;
+
   frequency = C0 * pow(2, voct);
   period = SAMPLE_RATE / frequency;
 

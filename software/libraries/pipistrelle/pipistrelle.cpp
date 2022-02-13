@@ -64,6 +64,12 @@ void dac_setup(int sample_rate) {
     |= TC_CTRLA_PRESCALER_DIV1 // prescaler 1 => 48MHz
     | TC_CTRLA_WAVEGEN_MFRQ; // match frequency mode
   while (TC4->COUNT16.STATUS.bit.SYNCBUSY); // sync
+
+  // I'm not sure why, but if we try to set the interrupt frequency
+  // immediately, it doesn't take. Waiting 10ms solves that.
+  delay(10);
+  top = CLOCK_SPEED / sample_rate;
+  REG_TC4_COUNT16_CC0 = top;
 }
 
 // scale an ADC reading to 0 to 1
