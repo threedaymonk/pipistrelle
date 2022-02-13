@@ -43,8 +43,9 @@ void setup() {
 void loop() {
   double frequency, voct;
 
-  // Quantise v/oct to nearest semitone.
-  voct = read_voct() + 5.0L * unipolar(read_pota());
+  voct = read_voct()
+    + 6.0L * unipolar(read_pota())
+    + 0.1L * unipolar(read_potb());
   frequency = C2 * pow(2, voct);
   period = SAMPLE_RATE / frequency;
 
