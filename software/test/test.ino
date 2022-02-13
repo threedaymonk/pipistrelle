@@ -40,7 +40,7 @@ void loop() {
 
   voct = read_voct()
     + 6.0L * unipolar(read_pota())
-    + 0.1L * unipolar(read_potb());
+    + unipolar(read_potb()) / 6.0L;
   frequency = C0 * pow(2, voct);
   period = SAMPLE_RATE / frequency;
 
