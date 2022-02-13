@@ -80,32 +80,58 @@ double bipolar(int reading) {
   return 2 * unipolar(reading) - 1;
 }
 
+int read_stabilised(int pin, int previous) {
+  int latest = 0, delta;
+  for (int i = 0; i < 32; i++) {
+    latest += analogRead(pin);
+  }
+  latest /= 32;
+  delta = latest - previous;
+  if (delta < -2 || delta > 2) return latest;
+  return previous;
+}
+
 int read_pota() {
-  return analogRead(POTA);
+  static int reading = 0, t = 0;
+  reading = read_stabilised(POTA, reading);
+  return reading;
 }
 
 int read_potb() {
-  return analogRead(POTB);
+  static int reading = 0;
+  reading = read_stabilised(POTB, reading);
+  return reading;
 }
 
 int read_potc() {
-  return analogRead(POTC);
+  static int reading = 0;
+  reading = read_stabilised(POTC, reading);
+  return reading;
 }
 
 int read_potd() {
-  return analogRead(POTD);
+  static int reading = 0;
+  reading = read_stabilised(POTD, reading);
+  return reading;
 }
 
 int read_cv1() {
-  return MAX_ADC - analogRead(CV1);
+  static int reading = 0;
+  reading = read_stabilised(CV1, reading);
+  return reading;
+  return MAX_ADC - reading;
 }
 
 int read_cv2() {
-  return MAX_ADC - analogRead(CV2);
+  static int reading = 0;
+  reading = read_stabilised(CV2, reading);
+  return MAX_ADC - reading;
 }
 
 double read_voct() {
-  return __cal_a + analogRead(VOCT) / __cal_k;
+  static int reading = 0;
+  reading = read_stabilised(VOCT, reading);
+  return __cal_a + reading / __cal_k;
 }
 
 // Convert a signed Q14 value into a value between 0 and 1023.
