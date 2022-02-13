@@ -1,28 +1,23 @@
-/*
-
-X-Y oscillator
-
-Pot A => Coarse frequency
-Pot B => Fine frequency
-Pot C + CV 1 => X
-Pot D + CV 2 => Y
-
-X-Y morph between waveforms thus:
-
-  sine  <--> triangle
-   ^            ^
-   |            |
-   v            v
- square <-->   saw
-
-*/
+// X-Y oscillator
+//
+// Pot A => Coarse frequency
+// Pot B => Fine frequency
+// Pot C + CV 1 => X
+// Pot D + CV 2 => Y
+//
+// X-Y morph between waveforms thus:
+//
+//  sine  --> triangle
+//   |           |
+//   v           v
+// square -->   saw
 
 #include <pipistrelle.h>
 #include <calibration.h>
 #include <math.h>
 #include <q14.h>
 #define SAMPLE_RATE 32000
-#define C2 65.4064
+#define C0 16.3516
 
 q14_t x, y;
 uint32_t period = 100;
@@ -46,7 +41,7 @@ void loop() {
   voct = read_voct()
     + 6.0L * unipolar(read_pota())
     + 0.1L * unipolar(read_potb());
-  frequency = C2 * pow(2, voct);
+  frequency = C0 * pow(2, voct);
   period = SAMPLE_RATE / frequency;
 
   x = Q14_1 * constrain(unipolar(read_potc()) + bipolar(read_cv1()) / 2, 0, 1);
