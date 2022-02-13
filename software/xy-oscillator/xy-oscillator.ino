@@ -25,7 +25,7 @@ uint32_t period = 100;
 void setup() {
   uint32_t top;
   initialize_hardware(SAMPLE_RATE);
-  digitalWrite(LED, 1);
+  digitalWrite(LED, 1); // Shows that we got this far
 }
 
 void loop() {
@@ -33,8 +33,8 @@ void loop() {
   int led_change_at = 0;
 
   voct = read_voct()
-    + 6.0L * unipolar(read_pota())
-    + unipolar(read_potb()) / 6.0L;
+    + 6.0L * unipolar(read_pota()) // coarse tuning C0 + 6 octaves
+    + unipolar(read_potb()) / 6.0L; // fine tuning +/- 2 semitones
 
   frequency = C0 * pow(2, voct);
   period = SAMPLE_RATE / frequency;
