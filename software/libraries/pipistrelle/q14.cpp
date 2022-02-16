@@ -44,6 +44,5 @@ q14_t q14_quarter_square(q14_t x) {
 }
 
 q14_t q14_saw(q14_t x) {
-  if (x < Q14_1_2) return x * 2;
-  return x * 2 - 2 * Q14_1;
+  return Q14_1 - 2 * x;
 }
