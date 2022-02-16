@@ -9,13 +9,12 @@
 #include <calibration.h>
 #include <math.h>
 #include <q14.h>
-#define SAMPLE_RATE 32000
+#define SAMPLE_RATE 11025
 #define C0 16.3516
-#define OSCILLATORS 5
+#define OSCILLATORS 7
 #define BUFSIZE 1024
 
 uint32_t period[OSCILLATORS];
-q14_t subosc = 0;
 q14_t buffer[BUFSIZE];
 int rptr = 0, wptr = 1;
 
@@ -46,10 +45,7 @@ q14_t next_sample() {
     // t is the relative offset within the cycle in Q14 representation
     t[i] = (offset[i] * Q14_1) / cycle_period[i];
 
-    //if (i == 7)
-    //  sample += (subosc * q14_quarter_square(t[i])) / Q14_1;
-    //else
-      sample += q14_saw(t[i]);
+    sample += q14_saw(t[i]);
 
     offset[i] += 1;
     if (offset[i] >= cycle_period[i]) offset[i] = 0;
@@ -83,9 +79,6 @@ void loop() {
   }
 
   fill_buffer();
-
-  // Oscillator 7 is sub
-  //period[7] = 4 * SAMPLE_RATE / frequency;
 }
 
 void TC4_Handler() {
