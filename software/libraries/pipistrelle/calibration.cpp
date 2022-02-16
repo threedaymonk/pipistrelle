@@ -1,6 +1,13 @@
+#include <stdint.h>
+#include <FlashStorage.h>
+#include <Arduino.h>
 #include <pipistrelle.h>
 #include <calibration.h>
-#include <FlashStorage.h>
+
+#define POT_LOW 100
+#define POT_HIGH 4000
+#define CV_LOW 1500
+#define CV_HIGH 2500
 
 FlashStorage(__flash_cal_d1, int);
 FlashStorage(__flash_cal_d3, int);
@@ -11,18 +18,19 @@ bool calibration_requested() {
   // Out to CV2
 
   // Check all pots are low
-  if (   read_pota() > POT_LOW
-      || read_potb() > POT_LOW
-      || read_potc() > POT_LOW
-      || read_potd() > POT_LOW) return false;
+  if (   analogRead(POTA) > POT_LOW
+      || analogRead(POTB) > POT_LOW
+      || analogRead(POTC) > POT_LOW
+      || analogRead(POTD) > POT_LOW) return false;
 
   // Probe CV1 with the DAC output
+  // CV inputs are inverted
   dac_write(0);
   delay(20);
-  if (read_cv1() > CV_LOW) return false;
+  if (analogRead(CV1) < CV_HIGH) return false;
   dac_write(1023);
   delay(20);
-  if (read_cv1() < CV_HIGH) return false;
+  if (analogRead(CV1) > CV_LOW) return false;
 
   return true;
 }
@@ -41,7 +49,7 @@ int sample_voct() {
 
 void run_calibration() {
   // Flash LED until pot A is turned clockwise
-  while(read_pota() < POT_HIGH) {
+  while(analogRead(POTA) < POT_HIGH) {
     analogWrite(LED, 255);
     delay(500);
     analogWrite(LED, 0);
@@ -52,7 +60,7 @@ void run_calibration() {
   __flash_cal_d1.write(sample_voct());
 
   // Double-flash LED until pot B is turned clockwise
-  while(read_potb() < POT_HIGH) {
+  while(analogRead(POTB) < POT_HIGH) {
     analogWrite(LED, 255);
     delay(167);
     analogWrite(LED, 0);
