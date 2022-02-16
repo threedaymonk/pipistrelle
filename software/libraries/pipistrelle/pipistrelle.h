@@ -13,6 +13,8 @@
 #define CV2 5
 #define VOCT 4
 #define LED 6
+#define HIGH_ACCURACY 32
+#define LOW_ACCURACY 1
 
 #define CLOCK_SPEED 47972352
 #define MAX_ADC 4095
@@ -27,12 +29,12 @@ void initialize_hardware(int sample_rate);
 void dac_setup(int sample_rate);
 double unipolar(int reading);
 double bipolar(int reading);
-int read_pota();
-int read_potb();
-int read_potc();
-int read_potd();
-int read_cv1();
-int read_cv2();
-double read_voct();
+int read_pota(int accuracy);
+int read_potb(int accuracy);
+int read_potc(int accuracy);
+int read_potd(int accuracy);
+int read_cv1(int accuracy);
+int read_cv2(int accuracy);
+double read_voct(int accuracy);
 
 #endif /* __pipistrelle_h__ */

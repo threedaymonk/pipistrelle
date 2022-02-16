@@ -86,57 +86,57 @@ double bipolar(int reading) {
   return 2 * unipolar(reading) - 1;
 }
 
-int read_stabilised(int pin, int previous) {
+int read_stabilised(int pin, int accuracy, int previous) {
   int latest = 0, delta;
-  for (int i = 0; i < 32; i++) {
+  for (int i = 0; i < accuracy; i++) {
     latest += analogRead(pin);
   }
-  latest /= 32;
+  latest /= accuracy;
   delta = latest - previous;
   if (delta < -2 || delta > 2) return latest;
   return previous;
 }
 
-int read_pota() {
+int read_pota(int accuracy) {
   static int reading = 0, t = 0;
-  reading = read_stabilised(POTA, reading);
+  reading = read_stabilised(POTA, accuracy, reading);
   return reading;
 }
 
-int read_potb() {
+int read_potb(int accuracy) {
   static int reading = 0;
-  reading = read_stabilised(POTB, reading);
+  reading = read_stabilised(POTB, accuracy, reading);
   return reading;
 }
 
-int read_potc() {
+int read_potc(int accuracy) {
   static int reading = 0;
-  reading = read_stabilised(POTC, reading);
+  reading = read_stabilised(POTC, accuracy, reading);
   return reading;
 }
 
-int read_potd() {
+int read_potd(int accuracy) {
   static int reading = 0;
-  reading = read_stabilised(POTD, reading);
+  reading = read_stabilised(POTD, accuracy, reading);
   return reading;
 }
 
-int read_cv1() {
+int read_cv1(int accuracy) {
   static int reading = 0;
-  reading = read_stabilised(CV1, reading);
+  reading = read_stabilised(CV1, accuracy, reading);
   return reading;
   return MAX_ADC - reading;
 }
 
-int read_cv2() {
+int read_cv2(int accuracy) {
   static int reading = 0;
-  reading = read_stabilised(CV2, reading);
+  reading = read_stabilised(CV2, accuracy, reading);
   return MAX_ADC - reading;
 }
 
-double read_voct() {
+double read_voct(int accuracy) {
   static int reading = 0;
-  reading = read_stabilised(VOCT, reading);
+  reading = read_stabilised(VOCT, accuracy, reading);
   return __cal_a + reading / __cal_k;
 }
 

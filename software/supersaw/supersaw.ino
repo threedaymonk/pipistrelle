@@ -69,15 +69,14 @@ void loop() {
   double frequency, voct, spread;
   int led_change_at = 0;
 
-  voct = read_voct()
-    + 6.0L * unipolar(read_pota()) // coarse tuning C0 + 6 octaves
-    + unipolar(read_potb()) / 6.0L; // fine tuning +/- 2 semitones
+  voct = read_voct(HIGH_ACCURACY)
+    + 6.0L * unipolar(read_pota(HIGH_ACCURACY)) // coarse tuning C0 + 6 octaves
+    + unipolar(read_potb(HIGH_ACCURACY)) / 6.0L; // fine tuning +/- 2 semitones
 
   frequency = C0 * pow(2, voct);
   spread = frequency / 80
-         * constrain(unipolar(read_potc()) + bipolar(read_cv1()) / 2, 0, 1);
-  subosc = Q14_1
-         * constrain(unipolar(read_potd()) + bipolar(read_cv2()) / 2, 0, 1);
+         * constrain(unipolar(read_potc(LOW_ACCURACY))
+                     + bipolar(read_cv1(LOW_ACCURACY)) / 2, 0, 1);
 
   for (int i = 0; i < OSCILLATORS; i++) {
     period[i] = SAMPLE_RATE / (frequency + spread * (i - OSCILLATORS / 2));
