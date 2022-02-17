@@ -11,7 +11,7 @@
 
 FlashStorage(__flash_cal_d1, int);
 FlashStorage(__flash_cal_d3, int);
-double __cal_k, __cal_a;
+float __cal_k, __cal_a;
 
 bool calibration_requested() {
   // Calibration mode is entered by moving all pots to minimum and connecting

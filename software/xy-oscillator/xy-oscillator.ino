@@ -61,7 +61,7 @@ void fill_buffer() {
 }
 
 void loop() {
-  double frequency, voct;
+  float frequency, voct;
   int led_change_at = 0;
 
   voct = read_voct(HIGH_ACCURACY)

@@ -2,7 +2,7 @@
 #define __calibration_h__
 
 // voltage = a + raw value / k
-extern double __cal_k, __cal_a;
+extern float __cal_k, __cal_a;
 
 bool calibration_requested();
 void run_calibration();

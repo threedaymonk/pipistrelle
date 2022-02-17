@@ -75,14 +75,14 @@ void dac_setup(int sample_rate) {
 // scale an ADC reading to 0 to 1
 // Ignore the top and bottom (see END_SLOP) because the end of pot travel isn't
 // very reliable
-double unipolar(int reading) {
+float unipolar(int reading) {
   int clamped = reading - END_SLOP;
-  return (double)constrain(clamped, 0, MAX_ADC - 2 * END_SLOP)
+  return (float)constrain(clamped, 0, MAX_ADC - 2 * END_SLOP)
     / (MAX_ADC - 2 * END_SLOP);
 }
 
 // scale an ADC reading to -1 to 1
-double bipolar(int reading) {
+float bipolar(int reading) {
   return 2 * unipolar(reading) - 1;
 }
 
@@ -134,7 +134,7 @@ int read_cv2(int accuracy) {
   return MAX_ADC - reading;
 }
 
-double read_voct(int accuracy) {
+float read_voct(int accuracy) {
   static int reading = 0;
   reading = read_stabilised(VOCT, accuracy, reading);
   return __cal_a + reading / __cal_k;

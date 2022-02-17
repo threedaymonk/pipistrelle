@@ -27,14 +27,14 @@
 
 void initialize_hardware(int sample_rate);
 void dac_setup(int sample_rate);
-double unipolar(int reading);
-double bipolar(int reading);
+float unipolar(int reading);
+float bipolar(int reading);
 int read_pota(int accuracy);
 int read_potb(int accuracy);
 int read_potc(int accuracy);
 int read_potd(int accuracy);
 int read_cv1(int accuracy);
 int read_cv2(int accuracy);
-double read_voct(int accuracy);
+float read_voct(int accuracy);
 
 #endif /* __pipistrelle_h__ */
