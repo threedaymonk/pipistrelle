@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <FlashStorage.h>
 #include <Arduino.h>
-#include <pipistrelle.h>
-#include <calibration.h>
+#include "Pipistrelle.h"
+#include "calibration.h"
 
 #define POT_LOW 100
 #define POT_HIGH 4000
@@ -25,10 +25,10 @@ bool calibration_requested() {
 
   // Probe CV1 with the DAC output
   // CV inputs are inverted
-  dac_write(0);
+  analogWrite(AUDIO_OUT, 0);
   delay(20);
   if (analogRead(CV1) < CV_HIGH) return false;
-  dac_write(1023);
+  analogWrite(AUDIO_OUT, 1023);
   delay(20);
   if (analogRead(CV1) > CV_LOW) return false;
 

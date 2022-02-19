@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <q14.h>
+#include "q14.h"
 
 // Waveform functions take an input value of 0 <= x < Q14_1
 // and return a value in the range -Q14_1 <= 0 <= Q14_1

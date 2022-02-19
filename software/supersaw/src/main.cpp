@@ -5,10 +5,11 @@
 // Pot C + CV 1 => Spread
 // Pot D + CV 2 => Sub oscillator
 
-#include <pipistrelle.h>
+#include <Pipistrelle.h>
 #include <calibration.h>
 #include <math.h>
 #include <q14.h>
+#include <cv.h>
 #define SAMPLE_RATE 11025
 #define C0 16.3516
 #define OSCILLATORS 7
@@ -21,13 +22,14 @@ uint32_t sub_period = 1;
 int osc_mix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
 q14_t sub_level = 0;
 int osc_divisor = 0;
+Pipistrelle *pip;
 
 void setup() {
   // Compute the weighting divisor once
   for (int i = 0; i < OSCILLATORS; i++) osc_divisor += osc_mix[i];
 
-  initialize_hardware(SAMPLE_RATE);
-  digitalWrite(LED, 1); // Shows that we got this far
+  pip = new Pipistrelle(SAMPLE_RATE);
+  pip->led(1); // Shows that we got this far
 }
 
 q14_t next_sample() {
@@ -63,19 +65,19 @@ q14_t next_sample() {
 }
 
 void loop() {
-  float frequency, voct, detune, subosc;
+  float frequency, voct, detune;
 
-  voct = read_voct(HIGH_ACCURACY)
-    + 6.0L * unipolar(read_pota(HIGH_ACCURACY)) // coarse tuning C0 + 6 octaves
-    + unipolar(read_potb(HIGH_ACCURACY)) / 2.0L; // fine tuning +/- 1/2 oct
+  voct = pip->voct()
+    + 6.0L * unipolar(pip->pota()) // coarse tuning C0 + 6 octaves
+    + unipolar(pip->potb()) / 2.0L; // fine tuning +/- 1/2 oct
 
   frequency = C0 * pow(2, voct);
   detune = frequency / 80
-         * constrain(unipolar(read_potc(LOW_ACCURACY))
-                     + bipolar(read_cv1(LOW_ACCURACY)) / 2, 0, 1);
+         * constrain(unipolar(pip->potc())
+                     + bipolar(pip->cv1()) / 2, 0, 1);
   sub_level = Q14_1_4
-            * constrain(unipolar(read_potd(LOW_ACCURACY))
-                        + bipolar(read_cv2(LOW_ACCURACY)) / 2, 0, 1);
+            * constrain(unipolar(pip->potd())
+                        + bipolar(pip->cv2()) / 2, 0, 1);
 
   for (int i = 0; i < OSCILLATORS; i++) {
     period[i] = SAMPLE_RATE / (frequency + detune * (i - OSCILLATORS / 2));
@@ -84,6 +86,6 @@ void loop() {
 }
 
 void TC4_Handler() {
-  q14_dac_write(next_sample());
+  pip->q14_dac_write(next_sample());
   REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
 }

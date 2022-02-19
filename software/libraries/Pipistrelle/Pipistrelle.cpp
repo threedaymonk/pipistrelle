@@ -1,21 +1,22 @@
-#include <pipistrelle.h>
-#include <calibration.h>
-#include <q14.h>
+#include <Arduino.h>
+#include "Pipistrelle.h"
+#include "calibration.h"
+#include "q14.h"
 
-void initialize_hardware(int sample_rate) {
+#define ADC_RESOLUTION 12
+
+Pipistrelle::Pipistrelle(int sample_rate) {
+  const int inputs[INPUTS] = {POTA, POTB, POTC, POTD, CV1, CV2, VOCT};
+
   // Use maximum ADC and DAC resolution available to us
-  analogReadResolution(12);
+  analogReadResolution(ADC_RESOLUTION);
 
   // Set up inputs and outputs
   // Note: *do not* set AUDIO_OUT to OUTPUT, or the output will be truncated
   // at around 2.2V
-  pinMode(POTA, INPUT);
-  pinMode(POTB, INPUT);
-  pinMode(POTC, INPUT);
-  pinMode(POTD, INPUT);
-  pinMode(CV1, INPUT);
-  pinMode(CV2, INPUT);
-  pinMode(VOCT, INPUT);
+  for (int i = 0; i < INPUTS; i++) {
+    pinMode(inputs[i], INPUT);
+  }
   pinMode(LED, OUTPUT);
 
   if (calibration_requested()) {
@@ -24,13 +25,19 @@ void initialize_hardware(int sample_rate) {
 
   load_calibration();
 
+  for (int i = 0; i < INPUTS; i++) {
+    analog[i] = new ResponsiveAnalogRead(inputs[i], true, 0.01);
+    analog[i]->setAnalogResolution(1 << ADC_RESOLUTION);
+    analog[i]->setActivityThreshold(4); // default is 4 for 10 bits
+  }
+
   dac_setup(sample_rate);
 
   REG_TC4_CTRLA |= TC_CTRLA_ENABLE;
   while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 }
 
-void dac_setup(int sample_rate) {
+void Pipistrelle::dac_setup(int sample_rate) {
   uint32_t top = CLOCK_SPEED / (sample_rate); // overflow interrupt trigger value
 
   REG_GCLK_GENDIV
@@ -72,21 +79,7 @@ void dac_setup(int sample_rate) {
   REG_TC4_COUNT16_CC0 = top;
 }
 
-// scale an ADC reading to 0 to 1
-// Ignore the top and bottom (see END_SLOP) because the end of pot travel isn't
-// very reliable
-float unipolar(int reading) {
-  int clamped = reading - END_SLOP;
-  return (float)constrain(clamped, 0, MAX_ADC - 2 * END_SLOP)
-    / (MAX_ADC - 2 * END_SLOP);
-}
-
-// scale an ADC reading to -1 to 1
-float bipolar(int reading) {
-  return 2 * unipolar(reading) - 1;
-}
-
-void dac_write(int sample) {
+void Pipistrelle::dac_write(int sample) {
   DAC->DATA.reg = (sample);
   DAC->CTRLA.bit.ENABLE = 1;
 }
@@ -94,61 +87,46 @@ void dac_write(int sample) {
 // Convert a signed Q14 value into a value between 0 and 1023.
 // We'll occasionally get 1024 and have to clamp it to 1023, but this
 // isn't noticeable and is much quicker than any cleverer method.
-void q14_dac_write(q14_t sample) {
+void Pipistrelle::q14_dac_write(q14_t sample) {
   DAC->DATA.reg = constrain((sample + Q14_1) >> 5, 0, 1023);
   DAC->CTRLA.bit.ENABLE = 1;
 }
 
-int read_stabilised(int pin, int accuracy, int previous) {
-  int latest = 0, delta;
-  for (int i = 0; i < accuracy; i++) {
-    latest += analogRead(pin);
-  }
-  latest /= accuracy;
-  delta = latest - previous;
-  if (delta < -2 || delta > 2) return latest;
-  return previous;
+int Pipistrelle::pota() {
+  analog[0]->update();
+  return analog[0]->getValue();
 }
 
-int read_pota(int accuracy) {
-  static int reading = 0, t = 0;
-  reading = read_stabilised(POTA, accuracy, reading);
-  return reading;
+int Pipistrelle::potb() {
+  analog[1]->update();
+  return analog[1]->getValue();
 }
 
-int read_potb(int accuracy) {
-  static int reading = 0;
-  reading = read_stabilised(POTB, accuracy, reading);
-  return reading;
+int Pipistrelle::potc() {
+  analog[2]->update();
+  return analog[2]->getValue();
 }
 
-int read_potc(int accuracy) {
-  static int reading = 0;
-  reading = read_stabilised(POTC, accuracy, reading);
-  return reading;
+int Pipistrelle::potd() {
+  analog[3]->update();
+  return analog[3]->getValue();
 }
 
-int read_potd(int accuracy) {
-  static int reading = 0;
-  reading = read_stabilised(POTD, accuracy, reading);
-  return reading;
+int Pipistrelle::cv1() {
+  analog[4]->update();
+  return MAX_ADC - analog[4]->getValue();
 }
 
-int read_cv1(int accuracy) {
-  static int reading = 0;
-  reading = read_stabilised(CV1, accuracy, reading);
-  return reading;
-  return MAX_ADC - reading;
+int Pipistrelle::cv2() {
+  analog[5]->update();
+  return MAX_ADC - analog[5]->getValue();
 }
 
-int read_cv2(int accuracy) {
-  static int reading = 0;
-  reading = read_stabilised(CV2, accuracy, reading);
-  return MAX_ADC - reading;
+float Pipistrelle::voct() {
+  analog[6]->update();
+  return __cal_a + analog[6]->getValue() / __cal_k;
 }
 
-float read_voct(int accuracy) {
-  static int reading = 0;
-  reading = read_stabilised(VOCT, accuracy, reading);
-  return __cal_a + reading / __cal_k;
+void Pipistrelle::led(int state) {
+  digitalWrite(LED, state);
 }

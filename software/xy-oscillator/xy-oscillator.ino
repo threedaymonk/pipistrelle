@@ -12,7 +12,7 @@
 //   v           v
 // square -->   saw
 
-#include <pipistrelle.h>
+#include <Pipistrelle.h>
 #include <calibration.h>
 #include <math.h>
 #include <q14.h>
