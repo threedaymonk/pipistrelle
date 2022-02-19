@@ -12,7 +12,7 @@
 #define SAMPLE_RATE 11025
 #define C0 16.3516
 #define OSCILLATORS 7
-#define BUFSIZE 1024
+#define BUFSIZE 100
 
 uint32_t period[OSCILLATORS];
 q14_t oscmix[OSCILLATORS];
