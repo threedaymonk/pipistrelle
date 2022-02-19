@@ -86,6 +86,19 @@ float bipolar(int reading) {
   return 2 * unipolar(reading) - 1;
 }
 
+void dac_write(int sample) {
+  DAC->DATA.reg = (sample);
+  DAC->CTRLA.bit.ENABLE = 1;
+}
+
+// Convert a signed Q14 value into a value between 0 and 1023.
+// We'll occasionally get 1024 and have to clamp it to 1023, but this
+// isn't noticeable and is much quicker than any cleverer method.
+void q14_dac_write(q14_t sample) {
+  DAC->DATA.reg = constrain((sample + Q14_1) >> 5, 0, 1023);
+  DAC->CTRLA.bit.ENABLE = 1;
+}
+
 int read_stabilised(int pin, int accuracy, int previous) {
   int latest = 0, delta;
   for (int i = 0; i < accuracy; i++) {
@@ -138,11 +151,4 @@ float read_voct(int accuracy) {
   static int reading = 0;
   reading = read_stabilised(VOCT, accuracy, reading);
   return __cal_a + reading / __cal_k;
-}
-
-// Convert a signed Q14 value into a value between 0 and 1023.
-// We'll occasionally get 1024 and have to clamp it to 1023, but this
-// isn't noticeable and is much quicker than any cleverer method.
-void q14_dac_write(q14_t sample) {
-  dac_write(constrain((sample + Q14_1) >> 5, 0, 1023));
 }

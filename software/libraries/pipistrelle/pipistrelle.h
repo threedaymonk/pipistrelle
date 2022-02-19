@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include <q14.h>
 
 #define AUDIO_OUT 0
 #define POTA 2
@@ -20,13 +21,10 @@
 #define MAX_ADC 4095
 #define END_SLOP 5
 
-#define dac_write(v) do { \
-  DAC->DATA.reg = (v); \
-  DAC->CTRLA.bit.ENABLE = 1; \
-} while (0)
-
 void initialize_hardware(int sample_rate);
 void dac_setup(int sample_rate);
+void dac_write(int sample);
+void q14_dac_write(q14_t sample);
 float unipolar(int reading);
 float bipolar(int reading);
 int read_pota(int accuracy);
