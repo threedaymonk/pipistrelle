@@ -73,7 +73,7 @@ void loop() {
   detune = frequency / 80
          * constrain(unipolar(read_potc(LOW_ACCURACY))
                      + bipolar(read_cv1(LOW_ACCURACY)) / 2, 0, 1);
-  sub_level = Q14_1_2
+  sub_level = Q14_1_4
             * constrain(unipolar(read_potd(LOW_ACCURACY))
                         + bipolar(read_cv2(LOW_ACCURACY)) / 2, 0, 1);
 
