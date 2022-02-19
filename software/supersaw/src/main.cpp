@@ -14,16 +14,17 @@
 #define OSCILLATORS 7
 #define BUFSIZE 100
 
-uint32_t period[OSCILLATORS];
-q14_t oscmix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
+// Avoid dividing by zero before everything is up
+uint32_t period[OSCILLATORS] = {1, 1, 1, 1, 1, 1, 1};
+// Pleasing weighting determined through trial and error
+q14_t osc_mix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
 q14_t buffer[BUFSIZE];
 int rptr = 0, wptr = 1;
+int osc_divisor = 0;
 
 void setup() {
-  uint32_t top;
-
-  // Anything is fine as long as it's not zero
-  for (int i = 0; i < OSCILLATORS; i++) period[i] = 1000;
+  // Compute the weighting divisor once
+  for (int i = 0; i < OSCILLATORS; i++) osc_divisor += osc_mix[i];
 
   // Clear buffer
   for (int i = 0; i < BUFSIZE; i++) buffer[i] = 0;
@@ -35,7 +36,7 @@ void setup() {
 q14_t next_sample() {
   static uint32_t offset[] = {0, 0, 0, 0, 0, 0, 0}, cycle_period[7];
   static q14_t t[7];
-  q14_t sample = 0, divisor = 0;
+  q14_t sample = 0;
 
   for (int i = 0; i < OSCILLATORS; i++) {
     // Set the period for this cycle.
@@ -46,14 +47,13 @@ q14_t next_sample() {
     // t is the relative offset within the cycle in Q14 representation
     t[i] = (offset[i] * Q14_1) / cycle_period[i];
 
-    sample += q14_saw(t[i]) * oscmix[i];
-    divisor += oscmix[i];
+    sample += q14_saw(t[i]) * osc_mix[i];
 
     offset[i] += 1;
     if (offset[i] >= cycle_period[i]) offset[i] = 0;
   }
 
-  return sample / divisor;
+  return sample / osc_divisor;
 }
 
 void fill_buffer() {
@@ -64,8 +64,7 @@ void fill_buffer() {
 }
 
 void loop() {
-  float frequency, voct, detune, sidemix;
-  int led_change_at = 0;
+  float frequency, voct, detune;
 
   voct = read_voct(HIGH_ACCURACY)
     + 6.0L * unipolar(read_pota(HIGH_ACCURACY)) // coarse tuning C0 + 6 octaves
@@ -75,8 +74,6 @@ void loop() {
   detune = frequency / 80
          * constrain(unipolar(read_potc(LOW_ACCURACY))
                      + bipolar(read_cv1(LOW_ACCURACY)) / 2, 0, 1);
-  sidemix = constrain(unipolar(read_potd(LOW_ACCURACY))
-                      + bipolar(read_cv2(LOW_ACCURACY)) / 2, 0, 1);
 
   for (int i = 0; i < OSCILLATORS; i++) {
     period[i] = SAMPLE_RATE / (frequency + detune * (i - OSCILLATORS / 2));
