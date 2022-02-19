@@ -80,7 +80,7 @@ void loop() {
 
   for (int i = 0, j; i < OSCILLATORS; i++) {
     period[i] = SAMPLE_RATE / (frequency + detune * (i - OSCILLATORS / 2));
-    oscmix[i] = Q14_1 - Q14_1 * pow((1 - sidemix) * 0.75, abs(OSCILLATORS / 2 - i));
+    oscmix[i] = Q14_1 * pow(sidemix * 0.75, abs(OSCILLATORS / 2 - i));
   }
 
   fill_buffer();
