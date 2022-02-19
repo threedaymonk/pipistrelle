@@ -15,7 +15,7 @@
 #define BUFSIZE 100
 
 uint32_t period[OSCILLATORS];
-q14_t oscmix[OSCILLATORS];
+q14_t oscmix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
 q14_t buffer[BUFSIZE];
 int rptr = 0, wptr = 1;
 
@@ -46,14 +46,14 @@ q14_t next_sample() {
     // t is the relative offset within the cycle in Q14 representation
     t[i] = (offset[i] * Q14_1) / cycle_period[i];
 
-    sample += (q14_saw(t[i]) * oscmix[i]) / Q14_1;
+    sample += q14_saw(t[i]) * oscmix[i];
     divisor += oscmix[i];
 
     offset[i] += 1;
     if (offset[i] >= cycle_period[i]) offset[i] = 0;
   }
 
-  return sample / (divisor / Q14_1);
+  return sample / divisor;
 }
 
 void fill_buffer() {
@@ -78,9 +78,8 @@ void loop() {
   sidemix = constrain(unipolar(read_potd(LOW_ACCURACY))
                       + bipolar(read_cv2(LOW_ACCURACY)) / 2, 0, 1);
 
-  for (int i = 0, j; i < OSCILLATORS; i++) {
+  for (int i = 0; i < OSCILLATORS; i++) {
     period[i] = SAMPLE_RATE / (frequency + detune * (i - OSCILLATORS / 2));
-    oscmix[i] = Q14_1 * pow(sidemix * 0.75, abs(OSCILLATORS / 2 - i));
   }
 
   fill_buffer();
