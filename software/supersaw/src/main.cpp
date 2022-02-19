@@ -16,8 +16,10 @@
 
 // Avoid dividing by zero before everything is up
 uint32_t period[OSCILLATORS] = {1, 1, 1, 1, 1, 1, 1};
+uint32_t sub_period = 1;
 // Pleasing weighting determined through trial and error
-q14_t osc_mix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
+int osc_mix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
+q14_t sub_level = 0;
 int osc_divisor = 0;
 
 void setup() {
@@ -29,9 +31,12 @@ void setup() {
 }
 
 q14_t next_sample() {
-  static uint32_t offset[] = {0, 0, 0, 0, 0, 0, 0}, cycle_period[7];
-  static q14_t t[7];
-  q14_t sample = 0;
+  static uint32_t offset[OSCILLATORS] = {0, 0, 0, 0, 0, 0, 0},
+                  sub_offset = 0,
+                  cycle_period[OSCILLATORS],
+                  sub_cycle_period;
+  static q14_t t[OSCILLATORS], sub_t;
+  q14_t sample = 0, sub_sample = 0;
 
   for (int i = 0; i < OSCILLATORS; i++) {
     // Set the period for this cycle.
@@ -48,11 +53,17 @@ q14_t next_sample() {
     if (offset[i] >= cycle_period[i]) offset[i] = 0;
   }
 
-  return sample / osc_divisor;
+  if (sub_offset == 0) sub_cycle_period = sub_period;
+  sub_t = (sub_offset * Q14_1) / sub_cycle_period;
+  sub_sample = q14_square(sub_t);
+  sub_offset++;
+  if (sub_offset >= sub_cycle_period) sub_offset = 0;
+
+  return q14_blend(sub_level, sample / osc_divisor, sub_sample);
 }
 
 void loop() {
-  float frequency, voct, detune;
+  float frequency, voct, detune, subosc;
 
   voct = read_voct(HIGH_ACCURACY)
     + 6.0L * unipolar(read_pota(HIGH_ACCURACY)) // coarse tuning C0 + 6 octaves
@@ -62,10 +73,14 @@ void loop() {
   detune = frequency / 80
          * constrain(unipolar(read_potc(LOW_ACCURACY))
                      + bipolar(read_cv1(LOW_ACCURACY)) / 2, 0, 1);
+  sub_level = Q14_1_2
+            * constrain(unipolar(read_potd(LOW_ACCURACY))
+                        + bipolar(read_cv2(LOW_ACCURACY)) / 2, 0, 1);
 
   for (int i = 0; i < OSCILLATORS; i++) {
     period[i] = SAMPLE_RATE / (frequency + detune * (i - OSCILLATORS / 2));
   }
+  sub_period = 2 * SAMPLE_RATE / frequency;
 }
 
 void TC4_Handler() {
