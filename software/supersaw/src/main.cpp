@@ -18,16 +18,11 @@
 uint32_t period[OSCILLATORS] = {1, 1, 1, 1, 1, 1, 1};
 // Pleasing weighting determined through trial and error
 q14_t osc_mix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
-q14_t buffer[BUFSIZE];
-int rptr = 0, wptr = 1;
 int osc_divisor = 0;
 
 void setup() {
   // Compute the weighting divisor once
   for (int i = 0; i < OSCILLATORS; i++) osc_divisor += osc_mix[i];
-
-  // Clear buffer
-  for (int i = 0; i < BUFSIZE; i++) buffer[i] = 0;
 
   initialize_hardware(SAMPLE_RATE);
   digitalWrite(LED, 1); // Shows that we got this far
@@ -56,13 +51,6 @@ q14_t next_sample() {
   return sample / osc_divisor;
 }
 
-void fill_buffer() {
-  while ((BUFSIZE + wptr - rptr) % BUFSIZE) {
-    buffer[wptr] = next_sample();
-    wptr = (wptr + 1) % BUFSIZE;
-  }
-}
-
 void loop() {
   float frequency, voct, detune;
 
@@ -78,12 +66,9 @@ void loop() {
   for (int i = 0; i < OSCILLATORS; i++) {
     period[i] = SAMPLE_RATE / (frequency + detune * (i - OSCILLATORS / 2));
   }
-
-  fill_buffer();
 }
 
 void TC4_Handler() {
-  q14_dac_write(buffer[rptr]);
-  rptr = (rptr + 1) % BUFSIZE;
+  q14_dac_write(next_sample());
   REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
 }
