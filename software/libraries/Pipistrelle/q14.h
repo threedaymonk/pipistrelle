@@ -15,7 +15,11 @@ q14_t q14_triangle(q14_t x);
 q14_t q14_square(q14_t x);
 q14_t q14_quarter_square(q14_t x);
 q14_t q14_saw(q14_t x);
+q14_t q14_floor(q14_t q);
+q14_t q14_ceil(q14_t q);
 q14_t ftoq14(float f);
 float q14tof(q14_t q);
+q14_t itoq14(int i);
+int q14toi(q14_t q);
 
 #endif /* __q14_h__ */

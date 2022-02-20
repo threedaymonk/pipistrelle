@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "q14.h"
 
+#define FRAC_MASK 0x3fff
+
 // Waveform functions take an input value of 0 <= x < Q14_1
 // and return a value in the range -Q14_1 <= 0 <= Q14_1
 
@@ -47,10 +49,27 @@ q14_t q14_saw(q14_t x) {
   return Q14_1 - 2 * x;
 }
 
+q14_t q14_floor(q14_t q) {
+  (q >> 14) << 14;
+}
+
+q14_t q14_ceil(q14_t q) {
+  if (q & FRAC_MASK) return q14_floor(q + Q14_1);
+  return q;
+}
+
 q14_t ftoq14(float f) {
   return Q14_1 * f;
 }
 
 float q14tof(q14_t q) {
   return (float)q / Q14_1;
+}
+
+q14_t itoq14(int i) {
+  return i << 14;
+}
+
+int q14toi(q14_t q) {
+  return q >> 14;
 }
