@@ -15,6 +15,7 @@ q14_t q14_triangle(q14_t x);
 q14_t q14_square(q14_t x);
 q14_t q14_quarter_square(q14_t x);
 q14_t q14_saw(q14_t x);
-void q14_dac_write(q14_t sample);
+q14_t ftoq14(float f);
+float q14tof(q14_t q);
 
 #endif /* __q14_h__ */

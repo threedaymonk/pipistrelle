@@ -7,7 +7,7 @@
 // Quadratic sine wave approximation
 // See http://www.coranac.com/2009/07/sines/
 q14_t q14_sine(q14_t x) {
-  int c, x2, y;
+  int c, y;
   static const int qN= 13, qA= 12, B=19900, C=3516;
 
   x <<= 1; // convert to Q15
@@ -45,4 +45,12 @@ q14_t q14_quarter_square(q14_t x) {
 
 q14_t q14_saw(q14_t x) {
   return Q14_1 - 2 * x;
+}
+
+q14_t ftoq14(float f) {
+  return Q14_1 * f;
+}
+
+float q14tof(q14_t q) {
+  return (float)q / Q14_1;
 }
