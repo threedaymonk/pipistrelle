@@ -2,7 +2,7 @@
 #include <FlashStorage.h>
 #include <Arduino.h>
 #include "Pipistrelle.h"
-#include "calibration.h"
+#include "Calibrator.h"
 
 #define POT_LOW 100
 #define POT_HIGH 4000
@@ -11,10 +11,14 @@
 
 FlashStorage(__flash_cal_d1, int);
 FlashStorage(__flash_cal_d3, int);
-float __cal_k, __cal_a;
 
-bool calibration_requested() {
-  // Calibration mode is entered by moving all pots to minimum and connecting
+Calibrator::Calibrator() {
+  if (requested()) run();
+  load();
+}
+
+bool Calibrator::requested() {
+  // Calibrator mode is entered by moving all pots to minimum and connecting
   // Out to CV2
 
   // Check all pots are low
@@ -28,6 +32,7 @@ bool calibration_requested() {
   analogWrite(AUDIO_OUT, 0);
   delay(20);
   if (analogRead(CV1) < CV_HIGH) return false;
+
   analogWrite(AUDIO_OUT, 1023);
   delay(20);
   if (analogRead(CV1) > CV_LOW) return false;
@@ -35,19 +40,23 @@ bool calibration_requested() {
   return true;
 }
 
-int sample_voct() {
+int Calibrator::sample_voct() {
+  const int samples = 10;
   int sum = 0; 
-  for (int i = 0; i < 10; i++) {
+
+  for (int i = 0; i < samples; i++) {
     sum += analogRead(VOCT);
     delay(20);
   }
-  Serial.print("Calibration value: ");
-  Serial.print(sum / 10);
+
+  Serial.print("Calibrator value: ");
+  Serial.print(sum / samples);
   Serial.print("\n");
-  return sum / 10;
+
+  return sum / samples;
 }
 
-void run_calibration() {
+void Calibrator::run() {
   // Flash LED until pot A is turned clockwise
   while(analogRead(POTA) < POT_HIGH) {
     analogWrite(LED, 255);
@@ -75,7 +84,7 @@ void run_calibration() {
   __flash_cal_d3.write(sample_voct());
 }
 
-void load_calibration() {
+void Calibrator::load() {
   int d1, d3;
   d1 = __flash_cal_d1.read();
   d3 = __flash_cal_d3.read();
@@ -87,10 +96,12 @@ void load_calibration() {
   Serial.write("\n");
 
   // Sensible-ish defaults based on build No. 1
+  // V/oct input is inverted, so 1V is higher than 3V, but this is irrelevant
+  // to the calibration algorithm
   if (d1 == 0 && d3 == 0) {
     d1 = 3363;
     d3 = 1978;
   }
-  __cal_k = (d3 - d1) / 2.0L;
-  __cal_a = 1.0L - d1 / __cal_k;
+  k = (d3 - d1) / 2.0F;
+  a = 1.0F - d1 / k;
 }

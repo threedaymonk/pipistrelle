@@ -38,6 +38,7 @@ public:
 private:
   void dac_setup(int sample_rate);
   ResponsiveAnalogRead *analog[INPUTS];
+  float cal_k, cal_a;
 };
 
 #endif /* __Pipistrelle_h__ */

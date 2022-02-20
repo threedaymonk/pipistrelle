@@ -6,7 +6,6 @@
 // Pot D + CV 2 => Sub oscillator
 
 #include <Pipistrelle.h>
-#include <calibration.h>
 #include <math.h>
 #include <q14.h>
 #include <cv.h>

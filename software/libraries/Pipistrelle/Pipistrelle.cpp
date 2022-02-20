@@ -1,12 +1,13 @@
 #include <Arduino.h>
 #include "Pipistrelle.h"
-#include "calibration.h"
+#include "Calibrator.h"
 #include "q14.h"
 
 #define ADC_RESOLUTION 12
 
 Pipistrelle::Pipistrelle(int sample_rate) {
   const int inputs[INPUTS] = {POTA, POTB, POTC, POTD, CV1, CV2, VOCT};
+  Calibrator *calibrator;
 
   // Use maximum ADC and DAC resolution available to us
   analogReadResolution(ADC_RESOLUTION);
@@ -19,22 +20,20 @@ Pipistrelle::Pipistrelle(int sample_rate) {
   }
   pinMode(LED, OUTPUT);
 
-  if (calibration_requested()) {
-    run_calibration();
-  }
+  // Fetch calibration values, running calibration if requested via handshake
+  calibrator = new Calibrator();
+  cal_k = calibrator->k;
+  cal_a = calibrator->a;
 
-  load_calibration();
-
+  // Set up denoised analogue inputs
   for (int i = 0; i < INPUTS; i++) {
     analog[i] = new ResponsiveAnalogRead(inputs[i], true, 0.01);
     analog[i]->setAnalogResolution(1 << ADC_RESOLUTION);
     analog[i]->setActivityThreshold(4); // default is 4 for 10 bits
   }
 
+  // Set up the interrupt that will service the DAC
   dac_setup(sample_rate);
-
-  REG_TC4_CTRLA |= TC_CTRLA_ENABLE;
-  while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 }
 
 void Pipistrelle::dac_setup(int sample_rate) {
@@ -77,6 +76,10 @@ void Pipistrelle::dac_setup(int sample_rate) {
   delay(10);
   top = CLOCK_SPEED / sample_rate;
   REG_TC4_COUNT16_CC0 = top;
+
+  // Enable the interrupt
+  REG_TC4_CTRLA |= TC_CTRLA_ENABLE;
+  while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 }
 
 void Pipistrelle::dac_write(int sample) {
@@ -124,7 +127,7 @@ int Pipistrelle::cv2() {
 
 float Pipistrelle::voct() {
   analog[6]->update();
-  return __cal_a + analog[6]->getValue() / __cal_k;
+  return cal_a + analog[6]->getValue() / cal_k;
 }
 
 void Pipistrelle::led(int state) {
