@@ -9,14 +9,14 @@
 #include <math.h>
 #include <q14.h>
 #include <cv.h>
-#define SAMPLE_RATE 11025
+#define SAMPLE_RATE 32000
 #define C0 16.3516
 #define OSCILLATORS 7
 #define BUFSIZE 100
 
 // Avoid dividing by zero before everything is up
-uint32_t period[OSCILLATORS] = {1, 1, 1, 1, 1, 1, 1};
-uint32_t sub_period = 1;
+uint32_t phase[OSCILLATORS] = {1, 1, 1, 1, 1, 1, 1};
+uint32_t sub_phase = 1;
 // Pleasing weighting determined through trial and error
 int osc_mix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
 q14_t sub_level = 0;
@@ -32,33 +32,16 @@ void setup() {
 }
 
 q14_t next_sample() {
-  static uint32_t offset[OSCILLATORS] = {0, 0, 0, 0, 0, 0, 0},
-                  sub_offset = 0,
-                  cycle_period[OSCILLATORS],
-                  sub_cycle_period;
-  static q14_t t[OSCILLATORS], sub_t;
+  static q14_t t[OSCILLATORS] = {0, 0, 0, 0, 0, 0, 0}, sub_t = 0;
   q14_t sample = 0, sub_sample = 0;
 
   for (int i = 0; i < OSCILLATORS; i++) {
-    // Set the period for this cycle.
-    // t == 0 is zero crossing point for all waveforms, so if we only ever
-    // change frequency here we won't get any audible artefacts from shifting.
-    if (offset[i] == 0) cycle_period[i] = period[i];
-
-    // t is the relative offset within the cycle in Q14 representation
-    t[i] = (offset[i] * Q14_1) / cycle_period[i];
-
     sample += q14_saw(t[i]) * osc_mix[i];
-
-    offset[i] += 1;
-    if (offset[i] >= cycle_period[i]) offset[i] = 0;
+    t[i] = (t[i] + phase[i]) % Q14_1;
   }
 
-  if (sub_offset == 0) sub_cycle_period = sub_period;
-  sub_t = (sub_offset * Q14_1) / sub_cycle_period;
   sub_sample = q14_square(sub_t);
-  sub_offset++;
-  if (sub_offset >= sub_cycle_period) sub_offset = 0;
+  sub_t = (sub_t + sub_phase) % Q14_1;
 
   return q14_blend(sub_level, sample / osc_divisor, sub_sample);
 }
@@ -67,8 +50,8 @@ void loop() {
   float frequency, voct, detune;
 
   voct = pip->voct()
-    + 6.0L * unipolar(pip->pota()) // coarse tuning C0 + 6 octaves
-    + unipolar(pip->potb()) / 2.0L; // fine tuning +/- 1/2 oct
+    + 6.0F * unipolar(pip->pota()) // coarse tuning C0 + 6 octaves
+    + unipolar(pip->potb()) / 2.0F; // fine tuning +/- 1/2 oct
 
   frequency = C0 * pow(2, voct);
   detune = frequency / 80
@@ -79,9 +62,11 @@ void loop() {
                         + bipolar(pip->cv2()) / 2, 0, 1);
 
   for (int i = 0; i < OSCILLATORS; i++) {
-    period[i] = SAMPLE_RATE / (frequency + detune * (i - OSCILLATORS / 2));
+    phase[i] = Q14_1
+             * (frequency + detune * (i - OSCILLATORS / 2))
+             / SAMPLE_RATE;
   }
-  sub_period = 2 * SAMPLE_RATE / frequency;
+  sub_phase = Q14_1 * frequency / (2 * SAMPLE_RATE);
 }
 
 void TC4_Handler() {
