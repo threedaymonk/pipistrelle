@@ -13,22 +13,20 @@
 // square -->   saw
 
 #include <Pipistrelle.h>
-#include <calibration.h>
 #include <math.h>
 #include <q14.h>
-#define SAMPLE_RATE 48000
+#include <cv.h>
+#define SAMPLE_RATE 32000
 #define C0 16.3516
 #define BUFSIZE 1024
 
 q14_t x, y;
 uint32_t period = 100;
-q14_t buffer[BUFSIZE];
-int rptr = 0, wptr = 1;
+Pipistrelle *pip;
 
 void setup() {
-  uint32_t top;
-  initialize_hardware(SAMPLE_RATE);
-  digitalWrite(LED, 1); // Shows that we got this far
+  pip = new Pipistrelle(SAMPLE_RATE);
+  pip->led(1); // Shows that we got this far
 }
 
 q14_t next_sample() {
@@ -53,34 +51,23 @@ q14_t next_sample() {
   return sample;
 }
 
-void fill_buffer() {
-  while ((BUFSIZE + wptr - rptr) % BUFSIZE) {
-    buffer[wptr] = next_sample();
-    wptr = (wptr + 1) % BUFSIZE;
-  }
-}
-
 void loop() {
   float frequency, voct;
-  int led_change_at = 0;
 
-  voct = read_voct(HIGH_ACCURACY)
-    + 6.0L * unipolar(read_pota(HIGH_ACCURACY)) // coarse tuning C0 + 6 octaves
-    + unipolar(read_potb(HIGH_ACCURACY)) / 6.0L; // fine tuning +/- 2 semitones
+  voct = pip->voct()
+    + 6.0F * unipolar(pip->pota()) // coarse tuning C0 + 6 octaves
+    + unipolar(pip->potb()) / 6.0F; // fine tuning +/- 2 semitones
 
   frequency = C0 * pow(2, voct);
   period = SAMPLE_RATE / frequency;
 
-  x = Q14_1 * constrain(unipolar(read_potc(LOW_ACCURACY))
-                        + bipolar(read_cv1(LOW_ACCURACY)) / 2, 0, 1);
-  y = Q14_1 * constrain(unipolar(read_potd(LOW_ACCURACY))
-                        + bipolar(read_cv2(LOW_ACCURACY)) / 2, 0, 1);
-
-  fill_buffer();
+  x = Q14_1 * constrain(unipolar(pip->potc())
+                        + bipolar(pip->cv1()) / 2, 0, 1);
+  y = Q14_1 * constrain(unipolar(pip->potd())
+                        + bipolar(pip->cv2()) / 2, 0, 1);
 }
 
 void TC4_Handler() {
-  q14_dac_write(buffer[rptr]);
-  rptr = (rptr + 1) % BUFSIZE;
+  pip->q14_dac_write(next_sample());
   REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
 }
