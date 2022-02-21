@@ -60,11 +60,9 @@ void loop() {
   frequency = C0 * pow(2, voct);
 
   detune = frequency / 80
-         * constrain(unipolar(pip->potc())
-                     + bipolar(pip->cv1()) / 2, 0, 1);
+         * unipolar_with_cv(pip->potc(), pip->cv1());
 
-  sub_level = ftoq14(0.25f * constrain(unipolar(pip->potd())
-                                       + bipolar(pip->cv2()) / 2, 0, 1));
+  sub_level = ftoq14(0.25f * unipolar_with_cv(pip->potd(), pip->cv2()));
 
   for (int i = 0; i < OSCILLATORS; i++) {
     phi[i] = ftoq14((frequency + detune * (i - OSCILLATORS / 2))

@@ -7,11 +7,17 @@
 // very reliable
 float unipolar(int reading) {
   int clamped = reading - END_SLOP;
-  return (float)constrain(clamped, 0, MAX_ADC - 2 * END_SLOP)
-    / (MAX_ADC - 2 * END_SLOP);
+  return (float)constrain(clamped, 0.0f, MAX_ADC - 2.0f * END_SLOP)
+    / (MAX_ADC - 2.0f * END_SLOP);
 }
 
 // scale an ADC reading to -1 to 1
 float bipolar(int reading) {
-  return 2 * unipolar(reading) - 1;
+  return 2.0f * unipolar(reading) - 1.0f;
+}
+
+// Combine a unipolar pot reading with a bipolar CV input clamped to 0 to 1.
+// When the pot is at 12 o'clock, this is equivalent to CV input on its own.
+float unipolar_with_cv(int pot, int cv) {
+  return constrain(unipolar(pot) + bipolar(cv) / 2.0f, 0.0f, 1.0f);
 }

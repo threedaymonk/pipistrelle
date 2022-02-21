@@ -52,12 +52,8 @@ void loop() {
   frequency = C0 * pow(2, voct);
   phi = ftoq14(frequency / SAMPLE_RATE);
 
-  x = (WT_ROWS - 1)
-    * constrain(unipolar(pip->potc())
-                + bipolar(pip->cv1()) / 2, 0, 1);
-  y = (WT_COLUMNS - 1)
-    * constrain(unipolar(pip->potd())
-                + bipolar(pip->cv2()) / 2, 0, 1);
+  x = (WT_ROWS - 1)    * unipolar_with_cv(pip->potc(), pip->cv1());
+  y = (WT_COLUMNS - 1) * unipolar_with_cv(pip->potd(), pip->cv2());
 
   xa = floor(x);
   xb = ceil(x);
