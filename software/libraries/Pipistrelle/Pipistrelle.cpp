@@ -130,6 +130,10 @@ float Pipistrelle::voct() {
   return cal_a + analog[6]->getValue() / cal_k;
 }
 
-void Pipistrelle::led(int state) {
+void Pipistrelle::led(bool state) {
   digitalWrite(LED, state);
+}
+
+void Pipistrelle::led(int state) {
+  analogWrite(LED, state);
 }

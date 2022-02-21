@@ -34,6 +34,7 @@ public:
   int cv2();
   float voct();
   void led(int state);
+  void led(bool state);
 
 private:
   void dac_setup(int sample_rate);

@@ -32,7 +32,7 @@ void setup() {
   for (int i = 0; i < OSCILLATORS; i++) osc_divisor += osc_mix[i];
 
   pip = new Pipistrelle(SAMPLE_RATE);
-  pip->led(1); // Shows that we got this far
+  pip->led(true); // Shows that we got this far
 }
 
 q14_t next_sample() {

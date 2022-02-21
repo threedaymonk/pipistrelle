@@ -25,7 +25,7 @@ Pipistrelle *pip;
 
 void setup() {
   pip = new Pipistrelle(SAMPLE_RATE);
-  pip->led(1); // Shows that we got this far
+  pip->led(true); // Shows that we got this far
 }
 
 q14_t next_sample() {
