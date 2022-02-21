@@ -21,7 +21,6 @@
 #include <cv.h>
 #define SAMPLE_RATE 32000
 #define C0 16.3516
-#define BUFSIZE 1024
 
 q14_t x, y, phi = 1;
 Pipistrelle *pip;

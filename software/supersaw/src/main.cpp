@@ -15,7 +15,6 @@
 #define SAMPLE_RATE 32000
 #define C0 16.3516
 #define OSCILLATORS 7
-#define BUFSIZE 100
 
 // Avoid dividing by zero before everything is up
 uint32_t phi[OSCILLATORS] = {1, 1, 1, 1, 1, 1, 1},

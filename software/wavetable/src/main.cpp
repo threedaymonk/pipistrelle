@@ -17,7 +17,6 @@
 #include "wavetable.h"
 #define SAMPLE_RATE 32000
 #define C0 16.3516
-#define BUFSIZE 1024
 
 int xa, xb, ya, yb;
 q14_t dx, dy, phi = 1;
