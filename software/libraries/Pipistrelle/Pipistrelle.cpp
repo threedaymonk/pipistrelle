@@ -135,5 +135,5 @@ void Pipistrelle::led(bool state) {
 }
 
 void Pipistrelle::led(int state) {
-  analogWrite(LED, state);
+  analogWrite(LED, constrain(state, 0, 255));
 }
