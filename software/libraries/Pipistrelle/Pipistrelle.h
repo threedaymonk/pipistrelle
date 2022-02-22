@@ -33,6 +33,9 @@ public:
   int cv1();
   int cv2();
   float voct();
+  bool gate1();
+  bool gate2();
+  bool gate3();
   void led(int state);
   void led(bool state);
 

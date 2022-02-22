@@ -130,6 +130,18 @@ float Pipistrelle::voct() {
   return cal_a + analog[6]->getValue() / cal_k;
 }
 
+bool Pipistrelle::gate1() {
+  return digitalRead(CV1) == 0;
+}
+
+bool Pipistrelle::gate2() {
+  return digitalRead(CV2) == 0;
+}
+
+bool Pipistrelle::gate3() {
+  return digitalRead(VOCT) == 0;
+}
+
 void Pipistrelle::led(bool state) {
   digitalWrite(LED, state);
 }
