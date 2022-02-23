@@ -14,11 +14,11 @@
 
 #define SAMPLE_RATE 8000
 
-#define MIN_A 0.0002F
-#define MAX_A 12.0F
-#define MIN_DR 0.001F
-#define MAX_DR 15.0F
-#define CURVE 2.0F
+#define MIN_A 0.0002L
+#define MAX_A 12.0L
+#define MIN_DR 0.001L
+#define MAX_DR 15.0L
+#define CURVE 2.0L
 
 Pipistrelle *pip;
 ADSR *env;
@@ -29,22 +29,29 @@ void setup() {
 }
 
 void loop() {
-  static float sample_rate = SAMPLE_RATE;
-  bool gate;
+  static double sample_rate = SAMPLE_RATE;
   static bool old_gate = false;
+  double a, d, s, r;
+  bool gate;
 
   gate = pip->gate3();
 
-  env->setAttackRate(  sample_rate
-                     * pow(unipolar(pip->pota()), CURVE)
-                     * MAX_A + MIN_A);
-  env->setDecayRate(  sample_rate
-                    * pow(unipolar_with_cv(pip->potb(), pip->cv1()), CURVE)
-                    * MAX_DR + MIN_DR);
-  env->setSustainLevel(unipolar(pip->potc()));
-  env->setReleaseRate(  sample_rate
-                      * pow(unipolar_with_cv(pip->potd(), pip->cv2()), CURVE)
-                      * MAX_DR + MIN_DR);
+  // Scale pots using an exponential curve. This allows a wider range while
+  // still providing fine control at lower levels.
+  // Technically, the range is MIN to (MIN + MAX), but as the MAX values are
+  // so much larger, the difference is insignificant.
+  a = pow(unipolar(pip->pota()), CURVE)
+    * MAX_A + MIN_A;
+  d = pow(unipolar_with_cv(pip->potb(), pip->cv1()), CURVE)
+    * MAX_DR + MIN_DR;
+  s = unipolar(pip->potc());
+  r = pow(unipolar_with_cv(pip->potd(), pip->cv2()), CURVE)
+    * MAX_DR + MIN_DR;
+
+  env->setAttackRate(a * sample_rate);
+  env->setDecayRate(d * sample_rate);
+  env->setSustainLevel(s);
+  env->setReleaseRate(r * sample_rate);
 
   if (gate != old_gate) {
     env->gate(gate);
