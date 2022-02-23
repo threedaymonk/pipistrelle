@@ -13,6 +13,11 @@
 #include "ADSR.h"
 
 #define SAMPLE_RATE 16000
+#define MIN_A 0.0002F
+#define MAX_A 12.0F
+#define MIN_DR 0.001F
+#define MAX_DR 15.0F
+#define CURVE 2.0F
 
 Pipistrelle *pip;
 ADSR *env;
@@ -29,10 +34,16 @@ void loop() {
 
   gate = pip->gate3();
 
-  env->setAttackRate(sample_rate * unipolar(pip->pota()));
-  env->setDecayRate(sample_rate * unipolar_with_cv(pip->potb(), pip->cv1()));
+  env->setAttackRate(  sample_rate
+                     * pow(unipolar(pip->pota()), CURVE)
+                     * MAX_A + MIN_A);
+  env->setDecayRate(  sample_rate
+                    * pow(unipolar_with_cv(pip->potb(), pip->cv1()), CURVE)
+                    * MAX_DR + MIN_DR);
   env->setSustainLevel(unipolar(pip->potc()));
-  env->setReleaseRate(sample_rate * unipolar_with_cv(pip->potd(), pip->cv2()));
+  env->setReleaseRate(  sample_rate
+                      * pow(unipolar_with_cv(pip->potd(), pip->cv2()), CURVE)
+                      * MAX_DR + MIN_DR);
 
   if (gate != old_gate) {
     env->gate(gate);
