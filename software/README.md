@@ -53,3 +53,13 @@ plane.
 - **Pot B**: Fine tune (+/- 1/2 octave)
 - **Pot C + CV 1**: X
 - **Pot D + CV 2**: Y
+
+## ADSR
+
+ADSR envelope generator
+
+- **Pot A**: Attack
+- **Pot B + CV 1**: Decay
+- **Pot C**: Sustain
+- **Pot D + CV 2**: Release
+- **V/oct**: Gate
