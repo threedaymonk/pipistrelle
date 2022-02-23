@@ -12,7 +12,8 @@
 #include <cv.h>
 #include "ADSR.h"
 
-#define SAMPLE_RATE 16000
+#define SAMPLE_RATE 8000
+
 #define MIN_A 0.0002F
 #define MAX_A 12.0F
 #define MIN_DR 0.001F
