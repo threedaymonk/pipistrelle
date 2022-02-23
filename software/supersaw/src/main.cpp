@@ -72,6 +72,6 @@ void loop() {
 }
 
 void TC4_Handler() {
-  pip->q14_dac_write(next_sample());
+  pip->q14DacWrite(next_sample());
   REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
 }

@@ -33,10 +33,10 @@ Pipistrelle::Pipistrelle(int sample_rate) {
   }
 
   // Set up the interrupt that will service the DAC
-  dac_setup(sample_rate);
+  setup(sample_rate);
 }
 
-void Pipistrelle::dac_setup(int sample_rate) {
+void Pipistrelle::setup(int sample_rate) {
   uint32_t top = CLOCK_SPEED / (sample_rate); // overflow interrupt trigger value
 
   REG_GCLK_GENDIV
@@ -82,7 +82,7 @@ void Pipistrelle::dac_setup(int sample_rate) {
   while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 }
 
-void Pipistrelle::dac_write(int sample) {
+void Pipistrelle::dacWrite(int sample) {
   DAC->DATA.reg = (sample);
   DAC->CTRLA.bit.ENABLE = 1;
 }
@@ -90,7 +90,7 @@ void Pipistrelle::dac_write(int sample) {
 // Convert a signed Q14 value into a value between 0 and 1023.
 // We'll occasionally get 1024 and have to clamp it to 1023, but this
 // isn't noticeable and is much quicker than any cleverer method.
-void Pipistrelle::q14_dac_write(q14_t sample) {
+void Pipistrelle::q14DacWrite(q14_t sample) {
   DAC->DATA.reg = constrain((sample + Q14_1) >> 5, 0, 1023);
   DAC->CTRLA.bit.ENABLE = 1;
 }

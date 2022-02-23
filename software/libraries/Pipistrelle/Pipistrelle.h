@@ -24,8 +24,8 @@
 class Pipistrelle {
 public:
   Pipistrelle(int sample_rate);
-  void dac_write(int sample);
-  void q14_dac_write(q14_t sample);
+  void dacWrite(int sample);
+  void q14DacWrite(q14_t sample);
   int pota();
   int potb();
   int potc();
@@ -40,7 +40,7 @@ public:
   void led(bool state);
 
 private:
-  void dac_setup(int sample_rate);
+  void setup(int sample_rate);
   ResponsiveAnalogRead *analog[INPUTS];
   float cal_k, cal_a;
 };

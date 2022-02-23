@@ -67,7 +67,7 @@ void TC4_Handler() {
   level = env->process();
 
   sample = 511 + 512 * level;
-  pip->dac_write(sample);
+  pip->dacWrite(sample);
 
   // PWM the LED
   digitalWrite(LED, counter < ((sample - 512) >> 2));

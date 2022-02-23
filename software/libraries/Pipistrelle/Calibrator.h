@@ -11,7 +11,7 @@ private:
   bool requested();
   void run();
   void load();
-  int sample_voct();
+  int sampleVoct();
 };
 
 #endif /* __Calibrator_h__ */

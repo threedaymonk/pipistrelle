@@ -40,7 +40,7 @@ bool Calibrator::requested() {
   return true;
 }
 
-int Calibrator::sample_voct() {
+int Calibrator::sampleVoct() {
   const int samples = 10;
   int sum = 0; 
 
@@ -66,7 +66,7 @@ void Calibrator::run() {
   }
 
   // Store reading for 1V
-  __flash_cal_d1.write(sample_voct());
+  __flash_cal_d1.write(sampleVoct());
 
   // Double-flash LED until pot B is turned clockwise
   while(analogRead(POTB) < POT_HIGH) {
@@ -81,7 +81,7 @@ void Calibrator::run() {
   }
 
   // Store reading for 3V
-  __flash_cal_d3.write(sample_voct());
+  __flash_cal_d3.write(sampleVoct());
 }
 
 void Calibrator::load() {
