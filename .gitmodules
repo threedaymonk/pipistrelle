@@ -1,0 +1,3 @@
+[submodule "software/3rdparty/fpm"]
+	path = software/3rdparty/fpm
+	url = https://github.com/MikeLankamp/fpm.git
