@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-#include "Device.h"
-#include "Calibrator.h"
+#include "Pipistrelle/Device.h"
+#include "Pipistrelle/Calibrator.h"
 
 namespace Pipistrelle {
 
