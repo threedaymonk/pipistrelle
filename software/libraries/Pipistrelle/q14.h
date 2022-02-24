@@ -1,5 +1,5 @@
-#ifndef __q14_h__
-#define __q14_h__
+#ifndef PIPISTRELLE_Q14_H_
+#define PIPISTRELLE_Q14_H_
 
 typedef int32_t q14_t;
 
@@ -22,4 +22,4 @@ float q14tof(q14_t q);
 q14_t itoq14(int i);
 int q14toi(q14_t q);
 
-#endif /* __q14_h__ */
+#endif  // PIPISTRELLE_Q14_H_

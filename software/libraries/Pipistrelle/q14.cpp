@@ -1,4 +1,5 @@
 #include <Arduino.h>
+
 #include "q14.h"
 
 #define FRAC_MASK 0x3fff
@@ -10,9 +11,9 @@
 // See http://www.coranac.com/2009/07/sines/
 q14_t q14_sine(q14_t x) {
   int c, y;
-  static const int qN= 13, qA= 12, B=19900, C=3516;
+  static const int qN = 13, qA = 12, B = 19900, C = 3516;
 
-  x <<= 1; // convert to Q15
+  x <<= 1;  // convert to Q15
 
   c = x << (30 - qN);
   x -= 1 << qN;
@@ -24,7 +25,7 @@ q14_t q14_sine(q14_t x) {
   y = B - (x * C >> 14);
   y = (1 << qA) - (x * y >> 16);
 
-  y <<= 2; // convert from Q12 to Q14
+  y <<= 2;  // convert from Q12 to Q14
 
   return c >= 0 ? y : -y;
 }
@@ -63,7 +64,7 @@ q14_t ftoq14(float f) {
 }
 
 float q14tof(q14_t q) {
-  return (float)q / Q14_1;
+  return static_cast<float>(q) / Q14_1;
 }
 
 q14_t itoq14(int i) {

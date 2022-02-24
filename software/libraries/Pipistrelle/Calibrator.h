@@ -1,17 +1,26 @@
-#ifndef __Calibrator_h__
-#define __Calibrator_h__
+#ifndef PIPISTRELLE_CALIBRATOR_H_
+#define PIPISTRELLE_CALIBRATOR_H_
+
+namespace Pipistrelle {
 
 class Calibrator {
-public:
+ public:
   Calibrator();
+  // voltage = a + raw value / k
   float k, a;
 
-private:
-  // voltage = a + raw value / k
+ private:
   bool requested();
   void run();
   void load();
   int sampleVoct();
+
+  const unsigned int kPotLow = 100;
+  const unsigned int kPotHigh = 4000;
+  const unsigned int kCVLow = 1500;
+  const unsigned int kCVHigh = 2500;
 };
 
-#endif /* __Calibrator_h__ */
+}  // namespace Pipistrelle
+
+#endif  // PIPISTRELLE_CALIBRATOR_H_

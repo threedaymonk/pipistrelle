@@ -1,5 +1,5 @@
-#ifndef __cv_h__
-#define __cv_h__
+#ifndef PIPISTRELLE_CV_H_
+#define PIPISTRELLE_CV_H_
 
 #define END_SLOP 5
 
@@ -7,4 +7,4 @@ float unipolar(int reading);
 float bipolar(int reading);
 float unipolar_with_cv(int pot, int cv);
 
-#endif /* __cv_h__ */
+#endif  // PIPISTRELLE_CV_H_

@@ -1,5 +1,6 @@
-#include <Pipistrelle.h>
 #include <Arduino.h>
+#include <Device.h>
+
 #include "cv.h"
 
 // scale an ADC reading to 0 to 1
@@ -7,8 +8,8 @@
 // very reliable
 float unipolar(int reading) {
   int clamped = reading - END_SLOP;
-  return (float)constrain(clamped, 0.0f, MAX_ADC - 2.0f * END_SLOP)
-    / (MAX_ADC - 2.0f * END_SLOP);
+  return constrain(clamped, 0.0f, Pipistrelle::maxInput - 2.0f * END_SLOP)
+    / (Pipistrelle::maxInput - 2.0f * END_SLOP);
 }
 
 // scale an ADC reading to -1 to 1

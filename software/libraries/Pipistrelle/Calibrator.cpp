@@ -1,13 +1,10 @@
-#include <stdint.h>
 #include <FlashStorage.h>
 #include <Arduino.h>
-#include "Pipistrelle.h"
+
+#include "Device.h"
 #include "Calibrator.h"
 
-#define POT_LOW 100
-#define POT_HIGH 4000
-#define CV_LOW 1500
-#define CV_HIGH 2500
+namespace Pipistrelle {
 
 FlashStorage(__flash_cal_d1, int);
 FlashStorage(__flash_cal_d3, int);
@@ -22,30 +19,30 @@ bool Calibrator::requested() {
   // Out to CV2
 
   // Check all pots are low
-  if (   analogRead(POTA) > POT_LOW
-      || analogRead(POTB) > POT_LOW
-      || analogRead(POTC) > POT_LOW
-      || analogRead(POTD) > POT_LOW) return false;
+  if (   analogRead(Device::Pin::PotA) > kPotLow
+      || analogRead(Device::Pin::PotB) > kPotLow
+      || analogRead(Device::Pin::PotC) > kPotLow
+      || analogRead(Device::Pin::PotD) > kPotLow) return false;
 
   // Probe CV1 with the DAC output
   // CV inputs are inverted
-  analogWrite(AUDIO_OUT, 0);
+  analogWrite(Device::Pin::AudioOut, 0);
   delay(20);
-  if (analogRead(CV1) < CV_HIGH) return false;
+  if (analogRead(Device::Pin::CV1) < kCVHigh) return false;
 
-  analogWrite(AUDIO_OUT, 1023);
+  analogWrite(Device::Pin::AudioOut, 1023);
   delay(20);
-  if (analogRead(CV1) > CV_LOW) return false;
+  if (analogRead(Device::Pin::CV1) > kCVLow) return false;
 
   return true;
 }
 
 int Calibrator::sampleVoct() {
   const int samples = 10;
-  int sum = 0; 
+  int sum = 0;
 
   for (int i = 0; i < samples; i++) {
-    sum += analogRead(VOCT);
+    sum += analogRead(Device::Pin::Voct);
     delay(20);
   }
 
@@ -58,10 +55,10 @@ int Calibrator::sampleVoct() {
 
 void Calibrator::run() {
   // Flash LED until pot A is turned clockwise
-  while(analogRead(POTA) < POT_HIGH) {
-    analogWrite(LED, 255);
+  while (analogRead(Device::Pin::PotA) < kPotHigh) {
+    analogWrite(Device::Pin::LED, 255);
     delay(500);
-    analogWrite(LED, 0);
+    analogWrite(Device::Pin::LED, 0);
     delay(500);
   }
 
@@ -69,14 +66,14 @@ void Calibrator::run() {
   __flash_cal_d1.write(sampleVoct());
 
   // Double-flash LED until pot B is turned clockwise
-  while(analogRead(POTB) < POT_HIGH) {
-    analogWrite(LED, 255);
+  while (analogRead(Device::Pin::PotB) < kPotHigh) {
+    analogWrite(Device::Pin::LED, 255);
     delay(167);
-    analogWrite(LED, 0);
+    analogWrite(Device::Pin::LED, 0);
     delay(167);
-    analogWrite(LED, 255);
+    analogWrite(Device::Pin::LED, 255);
     delay(166);
-    analogWrite(LED, 0);
+    analogWrite(Device::Pin::LED, 0);
     delay(500);
   }
 
@@ -85,9 +82,8 @@ void Calibrator::run() {
 }
 
 void Calibrator::load() {
-  int d1, d3;
-  d1 = __flash_cal_d1.read();
-  d3 = __flash_cal_d3.read();
+  int d1 = __flash_cal_d1.read();
+  int d3 = __flash_cal_d3.read();
 
   Serial.write("d1 = ");
   Serial.write(d1);
@@ -105,3 +101,5 @@ void Calibrator::load() {
   k = (d3 - d1) / 2.0F;
   a = 1.0F - d1 / k;
 }
+
+}  // namespace Pipistrelle

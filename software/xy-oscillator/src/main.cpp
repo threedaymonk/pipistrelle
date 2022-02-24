@@ -15,19 +15,20 @@
 // theta: position within the wave cycle (0 to Q14_1)
 // phi:   phase displacement per sample
 
-#include <Pipistrelle.h>
+#include <Device.h>
 #include <math.h>
 #include <q14.h>
 #include <cv.h>
+
 #define SAMPLE_RATE 32000
 #define C0 16.3516
 
 q14_t x, y, phi = 1;
-Pipistrelle *pip;
+Pipistrelle::Device *pip;
 
 void setup() {
-  pip = new Pipistrelle(SAMPLE_RATE);
-  pip->led(true); // Shows that we got this far
+  pip = new Pipistrelle::Device(SAMPLE_RATE);
+  pip->led(true);  // Shows that we got this far
 }
 
 q14_t next_sample() {
@@ -46,8 +47,8 @@ void loop() {
   float frequency, voct;
 
   voct = pip->voct()
-       + 6.0F * unipolar(pip->pota()) // coarse tuning
-       + unipolar(pip->potb()) / 2.0F; // fine tuning
+       + 6.0F * unipolar(pip->pota())  // coarse tuning
+       + unipolar(pip->potb()) / 2.0F;  // fine tuning
 
   frequency = C0 * pow(2, voct);
   phi = ftoq14(frequency / SAMPLE_RATE);
@@ -57,6 +58,6 @@ void loop() {
 }
 
 void TC4_Handler() {
-  pip->q14DacWrite(next_sample());
-  REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
+  pip->dacWrite(q14toi(next_sample()));
+  REG_TC4_INTFLAG = TC_INTFLAG_OVF;  // clear interrupt overflow flag
 }
