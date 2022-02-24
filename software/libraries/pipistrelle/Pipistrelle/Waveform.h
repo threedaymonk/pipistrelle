@@ -33,6 +33,10 @@ inline fixed saw(fixed x) {
   return F1 - x * 2;
 }
 
+inline fixed blend(fixed amt, fixed a, fixed b) {
+  return (static_cast<fixed>(1) - amt) * a + amt * b;
+}
+
 }  // namespace Pipistrelle::Waveform
 
 #endif  // PIPISTRELLE_WAVEFORM_H_

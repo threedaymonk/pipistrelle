@@ -4,74 +4,74 @@
 // Pot B => Fine tune (+/- 1/2 octave)
 // Pot C + CV 1 => Detune
 // Pot D + CV 2 => Sub oscillator level
-//
-// theta: position within the wave cycle (0 to Q14_1)
-// phi:   phase displacement per sample
 
-#include <Pipistrelle.h>
-#include <math.h>
-#include <q14.h>
-#include <cv.h>
-#define SAMPLE_RATE 32000
-#define C0 16.3516
-#define OSCILLATORS 7
+#include <fpm/fixed.hpp>
+#include <fpm/math.hpp>
 
-// Avoid dividing by zero before everything is up
-uint32_t phi[OSCILLATORS] = {1, 1, 1, 1, 1, 1, 1},
-         sub_phi = 1;
+#include <Pipistrelle/Device.h>
+#include <Pipistrelle/Waveform.h>
+#include <Pipistrelle/Modulation.h>
+
+using fixed = fpm::fixed_16_16;
+using namespace Pipistrelle::Waveform;
+using namespace Pipistrelle::Modulation;
+
+const int sampleRate = 32000;
+const float C0 = 16.3516f;
+const int numSaws = 7;
 // Pleasing weighting determined through trial and error
-const int osc_mix[OSCILLATORS] = {3, 4, 5, 6, 5, 4, 3};
+const int sawMix[numSaws] = {3, 4, 5, 6, 5, 4, 3};
+const fixed F0 = static_cast<fixed>(0);
 
-q14_t sub_level = 0;
-int osc_divisor = 0;
-Pipistrelle *pip;
+fixed sawPhi[numSaws], subPhi, subLevel;
+int sawDivisor = 0;
+
+Pipistrelle::Device *pip;
 
 void setup() {
   // Compute the weighting divisor once
-  for (int i = 0; i < OSCILLATORS; i++) osc_divisor += osc_mix[i];
-
-  pip = new Pipistrelle(SAMPLE_RATE);
-  pip->led(true); // Shows that we got this far
+  for (int i = 0; i < numSaws; i++) sawDivisor += sawMix[i];
+  pip = new Pipistrelle::Device(sampleRate);
+  pip->led(true);  // Shows that we got this far
 }
 
-q14_t next_sample() {
-  static q14_t theta[OSCILLATORS] = {0, 0, 0, 0, 0, 0, 0}, sub_theta = 0;
-  q14_t sample = 0, sub_sample = 0;
+fixed nextSample() {
+  static fixed sawTheta[numSaws] = {F0, F0, F0, F0, F0, F0, F0},
+               subTheta = F0;
+  fixed sample = F0, subSample;
 
-  for (int i = 0; i < OSCILLATORS; i++) {
-    sample += q14_saw(theta[i]) * osc_mix[i];
-    theta[i] = (theta[i] + phi[i]) % Q14_1;
+  for (int i = 0; i < numSaws; i++) {
+    sample += saw(sawTheta[i]) * sawMix[i];
+    sawTheta[i] = fpm::fmod(sawTheta[i] + sawPhi[i], static_cast<fixed>(1));
   }
 
-  sub_sample = q14_square(sub_theta);
-  sub_theta = (sub_theta + sub_phi) % Q14_1;
+  subSample = square(subTheta);
+  subTheta = fpm::fmod(subTheta + subPhi, static_cast<fixed>(1));
 
-  return q14_blend(sub_level, sample / osc_divisor, sub_sample);
+  return blend(subLevel, sample / sawDivisor, subSample);
 }
 
 void loop() {
-  float frequency, voct, detune;
+  float voct = pip->voct()
+             + 6.0F * unipolar(pip->pota())  // coarse tuning
+             + unipolar(pip->potb()) / 2.0F;  // fine tuning
 
-  voct = pip->voct()
-       + 6.0F * unipolar(pip->pota()) // coarse tuning
-       + unipolar(pip->potb()) / 2.0F; // fine tuning
+  float frequency = C0 * pow(2, voct);
 
-  frequency = C0 * pow(2, voct);
+  float detune = frequency / 80
+               * unipolarPotWithCV(pip->potc(), pip->cv1());
 
-  detune = frequency / 80
-         * unipolar_with_cv(pip->potc(), pip->cv1());
+  subLevel = static_cast<fixed>(0.25f * unipolarPotWithCV(pip->potd(), pip->cv2()));
 
-  sub_level = ftoq14(0.25f * unipolar_with_cv(pip->potd(), pip->cv2()));
-
-  for (int i = 0; i < OSCILLATORS; i++) {
-    phi[i] = ftoq14((frequency + detune * (i - OSCILLATORS / 2))
-                      / SAMPLE_RATE);
+  for (int i = 0; i < numSaws; i++) {
+    float f = frequency + detune * (i - numSaws / 2);
+    sawPhi[i] = static_cast<fixed>(f / sampleRate);
   }
 
-  sub_phi = ftoq14(frequency / (2 * SAMPLE_RATE));
+  subPhi = static_cast<fixed>(frequency / (2 * sampleRate));
 }
 
 void TC4_Handler() {
-  pip->q14DacWrite(next_sample());
-  REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
+  pip->dacWrite(nextSample());
+  REG_TC4_INTFLAG = TC_INTFLAG_OVF;  // clear interrupt overflow flag
 }

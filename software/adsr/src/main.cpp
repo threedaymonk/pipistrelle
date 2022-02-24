@@ -6,52 +6,55 @@
 // Pot D + CV 2 => Release
 // V/oct => Gate input
 
-#include <Pipistrelle.h>
-#include <stdint.h>
 #include <math.h>
-#include <cv.h>
+
+#include <Pipistrelle/Device.h>
+#include <Pipistrelle/Modulation.h>
+
 #include "ADSR.h"
 
-#define SAMPLE_RATE 8000
+using fixed = fpm::fixed_16_16;
+using namespace Pipistrelle::Modulation;
 
-#define MIN_A 0.0002L
-#define MAX_A 12.0L
-#define MIN_DR 0.001L
-#define MAX_DR 15.0L
-#define CURVE 2.0L
+// Anything over about 1kHz is fine when our output resolution is 10 bits,
+// but too low leads to visible LED flicker.
+const int sampleRate = 8000;
 
-Pipistrelle *pip;
+const double minA = 0.0002L,
+             maxA = 12.0L,
+             minDR = 0.001L,
+             maxDR = 15.0L,
+             controlExp = 2.0L;
+
+Pipistrelle::Device *pip;
 ADSR *env;
 
 void setup() {
   env = new ADSR();
-  pip = new Pipistrelle(SAMPLE_RATE);
+  pip = new Pipistrelle::Device(sampleRate);
 }
 
 void loop() {
-  static double sample_rate = SAMPLE_RATE;
   static bool old_gate = false;
-  double a, d, s, r;
-  bool gate;
 
-  gate = pip->gate3();
+  bool gate = pip->gate3();
 
   // Scale pots using an exponential curve. This allows a wider range while
   // still providing fine control at lower levels.
-  // Technically, the range is MIN to (MIN + MAX), but as the MAX values are
+  // Technically, the range is min to (min + max), but as the max values are
   // so much larger, the difference is insignificant.
-  a = pow(unipolar(pip->pota()), CURVE)
-    * MAX_A + MIN_A;
-  d = pow(unipolar_with_cv(pip->potb(), pip->cv1()), CURVE)
-    * MAX_DR + MIN_DR;
-  s = unipolar(pip->potc());
-  r = pow(unipolar_with_cv(pip->potd(), pip->cv2()), CURVE)
-    * MAX_DR + MIN_DR;
+  double a = pow(unipolar(pip->pota()), controlExp)
+           * maxA + minA;
+  double d = pow(unipolarPotWithCV(pip->potb(), pip->cv1()), controlExp)
+           * maxDR + minDR;
+  double s = unipolar(pip->potc());
+  double r = pow(unipolarPotWithCV(pip->potd(), pip->cv2()), controlExp)
+           * maxDR + minDR;
 
-  env->setAttackRate(a * sample_rate);
-  env->setDecayRate(d * sample_rate);
+  env->setAttackRate(a * sampleRate);
+  env->setDecayRate(d * sampleRate);
   env->setSustainLevel(s);
-  env->setReleaseRate(r * sample_rate);
+  env->setReleaseRate(r * sampleRate);
 
   if (gate != old_gate) {
     env->gate(gate);
@@ -61,16 +64,15 @@ void loop() {
 
 void TC4_Handler() {
   static int counter = 0;
-  int sample;
-  double level;
 
-  level = env->process();
+  double level = env->process();
 
-  sample = 511 + 512 * level;
+  int sample = 511 + 512 * level;
   pip->dacWrite(sample);
 
-  // PWM the LED
-  digitalWrite(LED, counter < ((sample - 512) >> 2));
+  // Manually PWM the LED. We don't use analogWrite because that kills
+  // operation (reason unknown, possibly due to interrupt use)
+  pip->led(counter < ((sample - 512) >> 2));
   counter = (counter + 1) % 128;
 
   REG_TC4_INTFLAG = TC_INTFLAG_OVF; // clear interrupt overflow flag
