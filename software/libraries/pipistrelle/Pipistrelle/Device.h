@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ResponsiveAnalogRead.h>
+#include <fpm/fixed.hpp>
 
 namespace Pipistrelle {
 
@@ -47,6 +48,13 @@ class Device {
     DAC->CTRLA.bit.ENABLE = 1;
     // We could/should wait for sync here, but we'll hit this again on the next
     // cycle anyway, and we'd rather lose a sample than lock up.
+  }
+
+  inline void dacWrite(fpm::fixed_16_16 sample) {
+    // Add 1 to get a positive value in the range 0-2.
+    // Fixed 2 is represented as 2 << 16 => 1 << 17.
+    // Drop 7 bits and we get 10 bits for the output.
+    dacWrite((sample + 1).raw_value() >> 7);
   }
 
  private:
