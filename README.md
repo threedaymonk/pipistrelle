@@ -1,6 +1,8 @@
 # Pipistrelle
 
-A cheap multi-function Eurorack module based on the Seeeduino Xiao module.
+A low-cost multi-function Eurorack module based on the Seeeduino Xiao module.
+
+![Assembled module](module.jpg)
 
 This module can be built for as little as £20 (based on an order of 25 with
 surface mount parts mostly assembled by JLCPCB) and provides:
